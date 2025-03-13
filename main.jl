@@ -1,72 +1,41 @@
-push!(LOAD_PATH, "./try1.jl")
-using Revise
-include("./try1.jl")
-using .ph_ped
 
+include("./main/activate_package.jl")
+# include("./examples/initialize_run.jl")
+GLMakie.activate!()
 begin
-    T = 10
-    dt = 0.01
-    println(Int(T/dt))
-    properties = Dict(:λ => 2, :A => 5, :B => 0.5, :hamiltonian => 0.0, :dt => dt)
-    model = initialize(10,11,5,42; properties)
-    for i in Agents.allagents(model)
-        println(i.id, i.pos, i.vel)
-    end
-end
-
-begin
-    data = []
-    mean_data = []
-    for i in 1:Int(T/dt)
-        push!(data, model.hamiltonian)
-        push!(mean_data, mean(data))
-        Agents.step!(model)
-        if mod(i,200) == 0
-            print("$i ")
-        end
-    end
-    println()
-    println(model.hamiltonian)
-    println(maximum(data))
-    println(mean(data))
-end
-
-begin
-    using GLMakie
-    GLMakie.activate!()
-    T = 10
-    dt = 0.001
-    println(Int(T/dt))
-    properties = Dict(:λ => 2, :A => 5, :B => 0.5, :hamiltonian => 0.0, :dt => dt)
-    model = initialize(20,10,10,42; properties)
-    fig = Figure()
-    # ax = CairoMakie.Axis(f[1, 1], xlabel = "time_steps", ylabel = "H",
-        # title = "")
-    fig, ax, abmobs = Agents.abmplot(model, add_controls = true)
-    fig
-    # Agents.add_interaction!(ax)
-end
-
-begin
-    dt = 0.01
-    println(Int(T/dt))
-    properties = Dict(:λ => 2, :A => 5, :B => 0.5, :hamiltonian => 0.0, :dt => dt)
-    model = initialize(5,11,5,42; properties)
-    Agents.abmvideo("ph_ped_walk.mp4", model; 
-    framerate = 60,
-    frames = 1000,
-    # dt=10
+    seed = 100
+    properties = Dict(
+        :λ => 2, 
+        :A => 5, 
+        :B => 0.3, 
+        :dt => 0.01, 
+        :sigma => 0.0,
+        :hamiltonian => 0.0, 
+        :dH => 0.0,
+        :no_disp_H => 0.0
     )
+    number_of_peds = 32
+    x_len = 11
+    y_len = 5
+    model = initialize(number_of_peds,x_len, y_len, leapfrog_step, properties; seed)
+    # Agents.allagents(model)
+
+
+
+    # GLMakie.activate!()
+    params = Dict(
+        :λ => 0:0.1:5,
+        :A => 0:0.1:10,
+        :B => 0:0.1:2,
+        :sigma => 0:0.1:2
+        # :solar_change => -0.1:0.01:0.1,
+    )
+    agent_color(a) = mode(a.id,2) == [1,0] ? "#bf2642" : "#2b2b33"
+    agent_size(a) = 100
+    # agent_marker = :utriangle
+    mdata = [:hamiltonian, :dH]
+    plotkwargs = (;
+        agent_color, agent_size)
+    fig, abmobs = Agents.abmexploration(model; dt=1:0.2:5, params, mdata)
+    fig
 end
-
-
-begin
-    dt = 0.01
-    properties = Dict(:λ => 2, :A => 5, :B => 0.5, :hamiltonian => 0.0, :dt => dt)
-    model = initialize(10,11,5,42; properties)
-    mdata = [:hamiltonian]
-    mdf = Agents.run!(model,1000;mdata)
-end
-
-
-mdf

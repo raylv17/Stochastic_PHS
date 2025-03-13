@@ -1,0 +1,24 @@
+name = "PH_Project"
+uuid = "daafc07f-7831-4de3-a9d3-34966b09375d"
+authors = ["rafay <rafayalvi17@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DiffEqPhysics = "055956cb-9e8b-5191-98cc-73ae4a59e68a"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[compat]
+Agents = "6.2.5"
+CairoMakie = "0.13.1"
+DiffEqPhysics = "3.15.0"
+DifferentialEquations = "7.16.0"
+LinearAlgebra = "1.11.0"
+Plots = "1.40.9"
+Random = "1.11.0"
+Statistics = "1.11.1"
