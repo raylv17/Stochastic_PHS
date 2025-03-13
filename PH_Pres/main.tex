@@ -1,0 +1,49 @@
+\documentclass[aspectratio=43]{beamer}
+% Packages
+\usepackage{datetime}
+\usepackage[backend=biber, sorting=none]{biblatex}
+\usepackage{hyperref}
+\usepackage{animate}
+\usepackage{xmpmulti}
+\addbibresource{bibliography/biblio.bib}
+
+% Theme
+\usetheme{Darmstadt}
+\usecolortheme{seahorse}
+\usecolortheme{beaver}
+
+% Beamer Template Changes
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamercovered{transparent}
+
+% Presentation Preamble
+\title{Lane Formation in Pedestrian Dynamics Simulations: A Stochastic Port Hamiltonian Approach}
+\subtitle{Master's Thesis Presentation}
+\author{Rafay Nawaid Alvi}
+\institute{Computer Simulation in Science (CSiS) \\Bergische Universität Wuppertal}
+\date{Feb 2025}
+
+% Presentation
+\begin{document}
+
+\frame{\titlepage}
+
+\input{sections/contents.tex}
+
+\input{sections/introduction.tex}
+
+\input{sections/microscopic_ped_model.tex}
+
+\input{sections/ph_framework.tex}
+
+\input{sections/sph_framework.tex}
+
+\input{sections/collective_behavior_revisited.tex}
+\begin{frame}[allowframebreaks]{References}
+    \printbibliography
+    % \bibliography{references}
+    % \bibliographystyle{apalike}
+\end{frame}
+
+\end{document}

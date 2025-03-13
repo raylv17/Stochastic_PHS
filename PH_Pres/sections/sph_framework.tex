@@ -1,0 +1,43 @@
+\section{Stochastic Port-Hamiltonian}
+
+\begin{frame}{Stochastic Differential Equations (SDEs)}
+    \begin{align*}
+        \text{d}X_t &= \mu(X_t,t)\text{d}t \rightarrow \text{Deterministic}\\
+        \text{d}X_t &= \mu(X_t,t)\text{d}t + \sigma(X_t,t)\text{d}W_t \rightarrow \text{Not Deterministic \cite{oksendal2003stochastic}} 
+    \end{align*}
+    \begin{itemize}
+        \item $\mu$: drift coefficient
+        \item $\sigma$: diffusion coefficient (stochastic term)
+        \item $W_t$: Wiener process (continuous time stochastic process with Gaussian increments) 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Stochastic Port-Hamiltonian System}
+    \begin{align*}
+        \text{d}z &= [(J-R)\nabla H(z(t)) + Bu(t)]\text{d}t + \sigma(z(t))\text{d}W(t) \\
+        y &= B^T\nabla H(z(t))
+    \end{align*}
+\end{frame}
+
+\begin{frame}{Stochastic Port-Hamiltonian System}
+    \begin{itemize}
+        \item Numerical Methods of Stochastic Differential Equations (SDEs)
+        \item Interpretation
+        \begin{itemize}
+            \item Ito
+            \item Stratonovich
+        \end{itemize}
+        \item Numerical methods for SDEs.
+        \begin{itemize}
+            \item Euler-Murayama Method
+        \end{itemize}
+        \item Symplectic methods for SDEs.
+        \begin{itemize}
+            \item Implicit Euler-Murayama Method
+            \item SDE solvers in \texttt{Julia}'s DifferentialEquatons.jl
+            \item \dots 
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+

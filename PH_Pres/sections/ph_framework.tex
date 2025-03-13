@@ -1,0 +1,128 @@
+\section{Port-Hamiltonian Formulation}
+
+\begin{frame}{Port-Hamiltonian Systems}
+    \begin{align*}
+        \dot{z} &= (J-R)\nabla H(z(t)) + Gu(t) \\
+        y &= G^T\nabla H(z(t))
+    \end{align*}
+    Here, \cite{van2006port}
+    \begin{itemize}
+        \item $J\in \mathbb{R}^{n \times n}$, a skew-symmetric matrix
+        \item $R\in \mathbb{R}^{n \times n}$, a positive semi-definite matrix
+        \begin{itemize}
+            \item $R \equiv 0$ and $G \equiv 0$ results in a conservative Hamiltonian System
+            \item $R > 0$ results in a dissipative system 
+        \end{itemize}
+        \item $H$, Hamiltonian, total energy of the system
+        \begin{itemize}
+            \item $\nabla H \in \mathbb{R}^{n} = \begin{bmatrix} \partial_q H & \partial_p H \end{bmatrix}^T$
+        \end{itemize}
+        \item $G\in \mathbb{R}^{n \times m}$, coefficient for input $u$
+        \item u, input parameter
+        \item y, output parameter (to other interacting systems)
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Port-Hamiltonian Formulation of the microscopic force-based pedestrian model}
+    \begin{itemize}
+        \item $\displaystyle{ H(z(t)) = \dfrac{1}{2}||p||^2 + \dfrac{1}{2}\sum^N_{i=1}\sum^N_{j\neq i}U(Q_{ij}(t))}$
+        \item $G = \lambda \in \mathbb{R}$
+    \end{itemize}
+    
+    Port-Hamiltonian Formulation for the pedestrian model \cite{tordeux2022multi}
+    \begin{gather*}
+        \begin{bmatrix}
+            \dot Q \\
+            \dot p
+        \end{bmatrix}
+        = 
+        \underbrace{
+        \begin{pmatrix}
+            \begin{bmatrix}
+                0     & M \\
+                -M^T  & 0
+            \end{bmatrix}
+            -
+            \begin{bmatrix}
+                0     & 0 \\
+                0     & \lambda I
+            \end{bmatrix}
+        \end{pmatrix}
+        }_{(J-R)}
+        \underbrace{
+        \begin{bmatrix}
+            \frac{1}{2}\nabla U(Q) \\
+            p
+        \end{bmatrix}
+        }_{\nabla H}
+        +
+        \lambda
+        \begin{bmatrix}
+            0 \\
+            u
+        \end{bmatrix}
+    \end{gather*}
+    \begin{table}
+        \centering
+        \begin{tabular}{ll}
+            $\dot Q = Mp$ & $\rightarrow\dot Q_{ij} = p_i - p_j$ \\
+            
+            $\dot p = -M^T\frac{1}{2}\nabla U(Q) - \lambda p - \lambda u$ & $\rightarrow\dot p_i = \lambda(u_i - p_i) - \sum_{j \neq i} \nabla U(Q_{ij})$
+        \end{tabular}
+    \end{table}
+    % \begin{align*}
+    %     \dot Q &= p_i - p_j \because \dot Q = Mp\\
+        
+    % \end{align*}
+
+\end{frame}
+
+\begin{frame}{Example: N=3}
+    % \begin{columns}
+        % \begin{column}{0.2\textwidth}
+    \begin{gather*}
+        M_1 = 
+        \begin{bmatrix}
+            1 & -1 & 0 \\
+            1 & 0 & -1 
+        \end{bmatrix}
+        M_2 = 
+        \begin{bmatrix}
+            -1 & 1 & 0 \\
+            0 & 1 & -1 
+        \end{bmatrix}
+        M_3 = 
+        \begin{bmatrix}
+            -1 & 0 & 1 \\
+            0 & -1 & 1 
+        \end{bmatrix}
+    \end{gather*}
+    % \end{column}
+    % \begin{column}{0.5\textwidth}
+    \begin{gather*}
+        M = 
+        \begin{bmatrix}
+            M_1 \\ 
+            M_2 \\
+            M_3
+        \end{bmatrix},
+        \dot Q = Mp = 
+        \begin{bmatrix}
+            p_1 - p_2 \\
+            p_1 - p_3 \\
+            p_2 - p_1 \\
+            p_2 - p_3 \\
+            p_3 - p_1 \\
+            p_3 - p_2 
+        \end{bmatrix}
+    \end{gather*}
+
+    \begin{align*}
+        H = \dfrac{1}{2}(p_1^2 + p_2^2 + p_3^2) + \dfrac{1}{2}(&\nabla U_{12} + \nabla  U_{13} + \\  
+        &\nabla  U_{21} +\nabla  U_{23} + \\ 
+        &\nabla  U_{31} +\nabla  U_{32})
+    \end{align*}
+% \end{column}
+    % \end{columns}
+\end{frame}

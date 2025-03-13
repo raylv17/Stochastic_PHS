@@ -1,0 +1,16 @@
+\section{Microscopic Pedestrian Model}
+
+\begin{frame}{Microscopic Pedestrian Model}{Periodic Boundaries}
+    \begin{align*}
+        &\dot{Q}_{ij}(t) = p_i(t) - p_j(t)_, \quad \quad j=1,\dots,N, j\neq i, &Q_{ij}(0) = Q^0_{ij}, \\
+        &\dot{p_i} = \lambda(u_i(t) - p_i(t)) - \sum_{j\neq i} \nabla U(Q_{ij}(t)), &p_i(0) = p^0_i
+    \end{align*}
+    Here,\linebreak
+    \begin{itemize}
+        \item For a pedestrian $i$, $\{q_i, p_i\}$ are its position and momentum respectively.
+        \item $Q_{ij} = q_i - q_j \in \mathbb{R}^2$, distance between agents
+        \item $\nabla U(x) = -\dfrac{x}{|x|}Ae^-\frac{|x|}{B} \in \mathbb{R_+}$, distanced based interaction potential, inspired from Helbing's social force model \cite{Helbing1995}
+        \item $\lambda \geq 0$, relaxation rate, sensitivity w.r.t to $u_i$
+        \item $u_i$, desired velocity of an agent.
+    \end{itemize}
+\end{frame}

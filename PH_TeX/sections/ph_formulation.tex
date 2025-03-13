@@ -1,0 +1,409 @@
+\section{Port-Hamiltonian Formulation of the Microscopic Model}
+
+This section serves to represent the microscopic dynamics of our pedestrian model using the framework of port-Hamiltonian systems, the generalized finite-dimensional PH formulation is given as:
+\begin{equation}
+\begin{aligned}
+    \dot z(t) &= (J-R)\nabla H(z(t)) + Bu(t) \\
+    y(t) &= B^T \nabla H(z(t))
+\end{aligned}
+\label{eq:ph_generalized}
+\end{equation}
+
+\subsection{Preliminaries}
+Given a port-Hamiltonian System (PHS), such as the one defined in \autoref{eq:ph_generalized}, it is able to gain energy from or dissipate energy to other interacting systems. Here, $z$ is the state of the system, $u$ is the input, and $y$ is the output of the system. Furthermore, $J \in \mathbb R^{n \times n}$ is a skew-symmetric matrix, $R \in \mathbb R^{n \times n}$ is a positive semi-definite matrix that represents dissipation from the system, and $B \in \mathbb R^{n \times m}$ where $ m \ll n$ being the coefficient for the input.
+
+One can achieve the classical Hamiltonian representation by assuming a system with no input, i.e. $B = 0$, and  no dissipation $R = 0$ as shown below using the first equation from \autoref{eq:ph_generalized}
+\begin{gather*}
+    \begin{aligned}
+    \dot z(t) &= J \cdot \nabla H \\
+    \begin{bmatrix}
+        \dot q(t) \\ \dot p(t)
+    \end{bmatrix}
+    &=
+    \begin{bmatrix}
+        0 & I_n \\ 
+        -I_n & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        \partial H / \partial q \\
+        \partial H / \partial p
+    \end{bmatrix} 
+    \end{aligned}
+\end{gather*}
+By setting the block matrices $I$ to size $n=1$, it can be demonstrated that the above equations yield the classical Hamiltonian equations, signifying that the skew-symmetry of $J$ is responsible for the conservation of the system.
+\begin{align*}
+\dot q = \dfrac{\partial H}{\partial p}, \quad \dot p = -\dfrac{\partial H}{\partial q}
+\end{align*}
+Having $R > 0$ allows the system to dissipate energy and the input $u$ allows the system to gain energy. As the inputs and outputs allows the system to interact with other systems, these can be denoted as ports of the system.
+
+\subsection{Port-Hamiltonian Model}
+For a system representing the microscopic model of $N > 2$ pedestrians, the state $z(t)$ would contain the relative positions and velocities of all pedestrians at a given time: $z(t) = (Q,p)^T$, where $Q = (Q_1,\dots,Q_N)$ and $p = (p_1,\dots,p_N)$ are vectors of relative positions and velocities of all pedestrians respectively. Such a system, as shown in \autoref{eq:micro} can be described through port-Hamiltonian formulation presented in \autoref{eq:ph_generalized} as follows:
+
+\begin{equation}
+    \begin{aligned}
+        \dot z(t) &= (J-R)\nabla H(z(t)) + \lambda \tilde u(t), &\qquad z(0) = (Q^0,p^0)\\
+        y(t) &= \lambda \nabla H(z(t)) 
+    \end{aligned}
+    \label{eq:ph_model}
+\end{equation}
+
+Here,
+\begin{gather}
+    \dot z(t) = 
+    \begin{bmatrix}
+        Q_1 & \cdots & Q_N & p_1 & \cdots & p_N 
+    \end{bmatrix}^T
+    \\
+    \tilde u = \begin{bmatrix} 0 & \cdots & 0 & u_1(t) & \cdots & u_N(t) \end{bmatrix}^T
+    \\
+    J =
+    \begin{bmatrix}
+        0 & M \\
+        -M^T & 0 
+    \end{bmatrix},
+    \quad 
+    R =
+    \begin{bmatrix}
+        0 & 0 \\
+        0 & \lambda I
+    \end{bmatrix},
+    \quad
+    M = 
+    \begin{bmatrix}
+        M_1 \\ \vdots \\ M_N
+    \end{bmatrix}
+    \label{eq:JRM}
+\end{gather}
+The resulting system is a linear input-state-output port-Hamiltonian system with dissipation. The Hamiltonian can now be defined as the total energy of the system, i.e. the sum of kinetic and potential energies
+\begin{align}
+    H(z(t)) = \dfrac{1}{2}||p(t)||^2 + \dfrac{1}{2}\sum_{i=1}^N\sum_{j=1}^NU(Q_{ij}(t))
+    \label{eq:Hamiltonian}
+\end{align}
+The gradient of the Hamiltonian would then be
+\begin{gather}
+    \nabla H = 
+    \begin{bmatrix}
+        \partial H / \partial Q \\ \partial H / \partial p
+    \end{bmatrix}
+    \label{eq:Hamiltonian_partial}
+\end{gather}
+
+The matrix equation representation of \autoref{eq:ph_model} can be written as
+\begin{gather}
+    \begin{bmatrix}
+        \dot Q \\ \dot p
+    \end{bmatrix} =
+    \left(
+    \begin{bmatrix}
+        0 & M \\ 
+        -M^T & 0
+    \end{bmatrix} -
+    \begin{bmatrix}
+        0 & 0 \\
+        0 & \lambda I
+    \end{bmatrix} \right)
+    \begin{bmatrix}
+        \frac{1}{2} \nabla U(Q) \\
+        p 
+    \end{bmatrix}
+    + \lambda 
+    \begin{bmatrix}
+        0 \\ u
+    \end{bmatrix}
+    \label{eq:matrixeq_ph}
+\end{gather}
+
+
+The block matrix $M$ can be defined such that 
+\begin{equation}
+\begin{aligned}
+    \dot Q = Mp
+\end{aligned}
+\label{eq:Qmp}   
+\end{equation}
+with its elements
+\begin{gather}
+    M_1 = 
+    \begin{bmatrix}
+        1 & -1 & 0 & 0 & \dots & 0 \\
+        1 & 0 & -1 & 0 & \dots & 0 \\
+        \vdots & & &  &  & \vdots \\
+        1 & & & &  & -1 \\
+    \end{bmatrix}, \quad
+    M_2 = 
+    \begin{bmatrix}
+        -1 & 1 & 0 & 0 & \dots & 0 \\
+        0 & 1 & -1 & 0 & \dots & 0 \\
+        \vdots & \vdots & &  &  & \vdots \\
+        0 & 1& & &  & -1 \\
+    \end{bmatrix}, \quad \dots
+    \label{eq:M_n_def}
+\end{gather}
+ 
+%  which reiterates the previously established relationship between pedestrian $i$ and all pedestrians $j \neq i$,
+%  \begin{equation*}\begin{aligned}
+%     \dot Q_{i} = p_i - p_j
+%  \end{aligned}
+%  \label{eq:Qdot}
+% \end{equation*}
+\hrulefill
+
+\textbf{R is positive semi-definite}
+
+ One can show that $R$ is positive semi-definite by showing $x^TRx \geq 0$, where $x \in \mathbb R^n$ is a real-valued vector $ x = [x_1,\dots x_N]$:
+ \begin{gather*}
+    \begin{aligned}
+    x^TRx&=x^T\begin{bmatrix}
+        0 & 0 \\
+        0 & \lambda I
+    \end{bmatrix}x
+    \\
+    &=\begin{bmatrix}
+        x_1\dots x_N
+    \end{bmatrix}
+    \begin{bmatrix}
+        0 & 0 \\
+        0 & \lambda I
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_1 \\ \vdots \\ x_N
+    \end{bmatrix}
+    \\
+    &=\begin{bmatrix}
+        0 & \lambda x_2 & \dots & \lambda x_N
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_1 \\ \vdots \\ x_N
+    \end{bmatrix}
+    \\
+    &=\lambda(x_2^2+\dots+x_N^2) \geq 0
+    \end{aligned}
+ \end{gather*}
+ Since $\lambda \geq 0$ and the squared terms are also positive, we can conclude that last expression as a whole is also greater than or equal to zero, proving that $x^TRx \geq 0$
+
+ It can be observed that the parameter $\lambda$ is present in both the dissipation term $R$ and the coefficient term of the input $\tilde u$.
+ 
+\hrulefill
+
+\textbf{Example: $N=3$}
+
+To better illustrate the implementation of the model, here we will concretely show the formulation of the model using $N=3$ pedestrians. Here the matrix $M = (M_1, M_2, M_3)^T$, where each $M_i$ shows the difference in quantities with respect to the pedestrian $i$ as shown below.
+
+\begin{gather*}
+    M_1 = 
+    \begin{bmatrix}
+        1 & -1 & 0 \\
+        1 & 0 & -1 
+    \end{bmatrix},\;
+    M_2 = 
+    \begin{bmatrix}
+        -1 & 1 & 0 \\
+        0 & 1 & -1 
+    \end{bmatrix},\;
+    M_3 = 
+    \begin{bmatrix}
+        -1 & 0 & 1 \\
+        0 & -1 & 1 
+    \end{bmatrix}
+\end{gather*}
+
+It can be observed that $M$ unfolds the relative velocities of pedestrians, resembling the dynamics presented in the first equation of \autoref{eq:micro}
+% \end{column}
+% \begin{column}{0.5\textwidth}
+\begin{gather*}
+    M = 
+    \begin{bmatrix}
+        M_1 \\ 
+        M_2 \\
+        M_3
+    \end{bmatrix}, \qquad
+    \dot Q = Mp = 
+    \begin{bmatrix}
+        p_1 - p_2 \\
+        p_1 - p_3 \\
+        p_2 - p_1 \\
+        p_2 - p_3 \\
+        p_3 - p_1 \\
+        p_3 - p_2 
+    \end{bmatrix}
+\end{gather*}
+Lastly, we represent the Hamiltonian
+\begin{gather*}
+    \begin{aligned}
+        H = \frac{1}{2}(p_1^2 + p_2^2 + p_3^2) + \frac{1}{2}(&\nabla U_{12} + \nabla  U_{13} + \\  
+        &\nabla  U_{21} +\nabla  U_{23} + \\ 
+        &\nabla  U_{31} +\nabla  U_{32})
+    \end{aligned}    
+\end{gather*}
+
+\hrulefill
+
+\subsection{Deriving the Equations of Motion}
+We can show that the port-Hamiltonian formulation \autoref{eq:ph_model} is indeed the same model as \autoref{eq:micro} by deriving the latter from the former. 
+Let us start by simplifying the matrix equation \autoref{eq:matrixeq_ph} for $\dot Q$ and $\dot p$
+
+\begin{gather*}
+    \dot Q = 
+    \left[
+    \begin{bmatrix}
+        0 & M
+    \end{bmatrix}
+    - \begin{bmatrix}
+        0 & 0
+    \end{bmatrix}
+    \right]
+    \begin{bmatrix}
+        \frac{1}{2}\nabla U(Q) \\
+        p
+    \end{bmatrix}
+    +\lambda\begin{bmatrix}
+        0
+    \end{bmatrix}
+\end{gather*}
+\begin{gather*}
+    \dot p= 
+    \left[
+    \begin{bmatrix}
+        -M^T & 0
+    \end{bmatrix}
+    - \begin{bmatrix}
+        0 & \lambda I
+    \end{bmatrix}
+    \right]
+    \begin{bmatrix}
+        \frac{1}{2}\nabla U(Q) \\
+        p
+    \end{bmatrix}
+    +\lambda\begin{bmatrix}
+        u
+    \end{bmatrix}
+\end{gather*}
+Resolving $\dot Q$ would reiterate the relationship described in \autoref{eq:Qmp}
+\begin{equation*}
+    \dot Q = Mp
+\end{equation*}
+And, resolving $\dot p$ gives us the equation for the velocity in matrix form
+\begin{equation*}
+    \dot p = -M^T\frac{1}{2}\nabla U(Q) - \lambda p + \lambda u
+\end{equation*}
+
+Using the definition of $M$ from \autoref{eq:JRM} and \autoref{eq:M_n_def}, we can construct the equations for $Q$ for every $i = 1,\dots,N$.
+\begin{align*}
+    \dot Q_{ij} = p_i - p_j
+\end{align*}
+Similarly, using the property that $U(x)$ is an odd function \autoref{eq:def_U}, we can derive $\dot p$
+\begin{align*}
+    \dot p_i &= \lambda(u_i - p_i) - \frac{1}{2}\sum_{j \neq i}(\nabla U(Q_{ij}) - \nabla U(Q_{ji})) \\ 
+    \dot p_i &= \lambda(u_i - p_i) - \sum_{j \neq i}\nabla U(Q_{ij}) 
+\end{align*}
+
+By showing the derivation of the same microscopic dynamics from the port-Hamiltonian formulation, we can establish that the proposed microscopic model for the pedestrian dynamics has Hamiltonian structure, and that the system can be described using the Hamiltonian $H$ as a quantitative measure for the collective dynamics of the pedestrians.
+
+\subsection{Stochastic Port Hamiltonian Formulation}
+Continuing from the stochastic induced dynamics of the microscopic model in \autoref{eq:stoch_micro}, we can use the port-Hamiltonian formulation of the deterministic dynamics \autoref{eq:ph_model} and represent it with the noise term.
+\begin{equation}
+    \begin{aligned}
+        dz(t) &= (J-R)\nabla H(z(t))dt + \lambda \tilde u(t)dt + \sigma d\xi(t)\\
+        dy(t) &= \lambda \nabla H(z(t))dt
+    \end{aligned}
+    \label{eq:stoch_ph_model}
+\end{equation}
+Similar to \autoref{eq:matrixeq_ph}, and following the formulation from \cite{rudiger2024stability}, the matrix equation representation would become
+\begin{gather}
+    \begin{bmatrix}
+        dQ \\ dp
+    \end{bmatrix} =
+    \left(
+    \begin{bmatrix}
+        0 & M \\ 
+        -M^T & 0
+    \end{bmatrix} -
+    \begin{bmatrix}
+        0 & 0 \\
+        0 & \lambda I
+    \end{bmatrix} \right)
+    \begin{bmatrix}
+        \frac{1}{2} \nabla U(Q) \\
+        p 
+    \end{bmatrix}dt
+    + \lambda 
+    \begin{bmatrix}
+        0 \\ u
+    \end{bmatrix}dt
+    + \sigma
+    \begin{bmatrix}
+        0 \\ dW(t)
+    \end{bmatrix}
+    \label{eq:matrix_stoc_eq_ph}
+\end{gather}
+
+This will be used as the basis of our stochastic system. Following from the dynamics presented in \autoref{eq:stoch_micro}, it can be noted that the stochastic term is only effecting the momentum equation.
+
+It can also be noted that the expression for the Hamiltonian \autoref{eq:Hamiltonian} will remain the same, since the stochastic terms are included within the momentum term $\dot p$. 
+
+\subsection{Macroscopic Observations from Hamiltonian Behavior}
+The time derivative of the Hamiltonian is derived by its taking the total derivative with respect to time:
+\begin{align*}
+    \dfrac{d}{dt}H(z(t)) = \nabla^T H(z(t))\cdot \dot z(t)
+\end{align*}
+Substituting $\dot z(t)$ from \autoref{eq:ph_model} denoting that $y = \lambda \nabla H$ and thus $y^T = \nabla^T H \lambda$, we get
+\begin{align*}
+    \dfrac{d}{dt}H(z(t)) = \nabla^T H(z(t))(J-R)\nabla H(z(t)) + \underbrace{\nabla^T H(z(t)) \lambda}_{y^T} \tilde u
+\end{align*}
+Using the skew-symmetric property of $J$ that $x^TJx=0$ we can simplify and obtain the expression for the time derivative of the Hamiltonian.
+\begin{align}
+    \frac{d}{dt}H(z(t)) = y^Tz(t)\tilde u(t) - \nabla^T H(z(t))R \nabla H(z(t))
+\end{align}
+
+Expanding the terms further by substituting the gradient of the Hamiltonian \autoref{eq:Hamiltonian_partial} and the definition of $R$ \autoref{eq:JRM} can help us further simplify the expression giving us the following energy balance
+\begin{align}
+    \dfrac{d}{dt}H(z(t)) &= \lambda \nabla^T H(z(t)) \tilde u - \nabla^T H(z(t)) R \nabla H(z(t)) \nonumber \\
+    &\begin{aligned}
+        &= \lambda 
+        \begin{bmatrix}
+        % \dfrac{\partial H}{\partial Q} & \dfrac{\partial H}{\partial p}
+        \partial H / \partial Q & \partial H / \partial p
+        \end{bmatrix}
+        \begin{bmatrix}
+            0 \\
+            u
+        \end{bmatrix}
+        - 
+        \begin{bmatrix}
+            % \dfrac{\partial H}{\partial Q} & \dfrac{\partial H}{\partial p}
+        \partial H / \partial Q & \partial H / \partial p
+        \end{bmatrix}
+        \begin{bmatrix}
+            0 & 0 \\ 0 & \lambda I
+        \end{bmatrix}
+        \begin{bmatrix}
+            % \frac{\partial }{\partial Q} H \\ \frac{\partial }{\partial p}H
+        \partial H / \partial Q \\ \partial H / \partial p
+        \end{bmatrix}  \\ 
+        &= \lambda p^T u - \lambda  p^T p \\ 
+        &= \lambda p^T (u - p) \\ 
+    \end{aligned} \nonumber \\
+    \dfrac{d}{dt}H(z(t))&= \lambda \langle p(t),u(t)-p(t) \rangle
+    \label{eq:dH}
+\end{align}
+
+
+It can be seen that the time derivative of the Hamiltonian $\frac{d}{dt}H(z(t))$ depends only on the velocities of the pedestrians.
+
+With this, we can confirm the following claims
+\begin{itemize}
+    \item The Hamiltonian remains constant $\frac{d}{dt}H(z(t)) = 0$ for all times $t \geq 0$ if the system has no dissipation $\lambda = 0$. 
+    \begin{align*}
+        \forall t \geq 0,\quad \dfrac{d}{dt}H(z(t)) = 0 \qquad \text{if} \qquad \lambda = 0
+    \end{align*}
+    Reiterating that purely Hamiltonian behavior is indeed conservative.
+    \item If the desired velocities are zero, i.e. $u = 0$, then the Hamiltonian decreases over time
+    \begin{align*}
+        \forall t \geq 0,\quad \dfrac{d}{dt}H(z(t)) \leq 0 \qquad \text{if} \qquad \forall i,\; u_i = 0
+    \end{align*}
+    Since the system is allowed to dissipate without input feed, the asymptotic behavior would yield crystallization, i.e. the pedestrians would stop moving.
+    \item If all the pedestrians move at their desired velocities, i.e. $p(t) = u(t)$, then the time derivative is zero
+    \begin{align*}
+        \dfrac{d}{dt} H(z(t) = 0 \qquad \text{if} \qquad \forall i,\; p_i(t) = u_i(t)
+    \end{align*}
+\end{itemize}
