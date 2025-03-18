@@ -2,7 +2,7 @@
 # cd("./PH_Project/")
 # Pkg.activate(".")
 using Agents, Random, DifferentialEquations, DiffEqPhysics
-using LinearAlgebra, Statistics
+using LinearAlgebra, Statistics, Distributions
 ## Define Agent
 @agent struct Pedestrian(ContinuousAgent{2,Float64})
     uᵢ::Vector{Float64} # desired_velocity : custom property
@@ -147,7 +147,7 @@ function ode_step(agent, model)
     prob = ODEProblem{true}(ph_model!, u0, tspan, p)
     
     # Use the model's integrator
-    integrator = DifferentialEquations.init(prob, Tsit5(), dt=model.dt)
+    integrator = DifferentialEquations.init(prob, RadauIIA3(), dt=model.dt)
     
     # Solve and update agent state
     step!(integrator, model.dt)
@@ -160,7 +160,7 @@ end
 
 function ode_step_exeuler(agent, model)
     u0 = [agent.vel[1], agent.vel[2], agent.pos[1], agent.pos[2]]
-    tspan = (0.0, Inf)
+    tspan = (0.0, Inf)print(" $(std(mdf[:,:hamiltonian])), $(std(mdf[:,:dH]))")
     p = (agent, model)
     prob = ODEProblem{true}(ph_model!, u0, tspan, p)
     
@@ -255,18 +255,19 @@ function stochastic_ode_step(agent, model)
     prob = SDEProblem(ph_stoc_drift!,ph_stoc_diffu!,u0, tspan, p, noise=W)
     
     # Use the model's integrator
-    integrator = DifferentialEquations.init(prob, ImplicitEM(), dt=model.dt)
-    # integrator = DifferentialEquations.init(prob, SImplicitMidpoint(), dt=model.dt)
+    # integrator = DifferentialEquations.init(prob, ImplicitEM(), dt=model.dt)
+    # integrator = DifferentialEquations.init(prob, EulerHeun(), dt=model.dt)
+    integrator = DifferentialEquations.init(prob, LambaEulerHeun(), dt=model.dt)
     
     # Solve and update agent state
     step!(integrator)
     vel = integrator.u[1:2]
     pos = integrator.u[3:4]
+    wiener_increment = integrator.W.dW
+    # println(wiener_increment)
     # pos = normalize_position(pos,model)
-    return vel, SVector{2}(pos)
+    return vel, SVector{2}(pos), wiener_increment
 end
-
-
 
 ## Dummy Methods
 function simple_move(agent::Pedestrian, model)
@@ -291,16 +292,23 @@ end
 
 function model_step!(model,num_solver)
     ## simple_move
+    random_list = []
     for agent in allagents(model)
-        v, p = num_solver(agent,model)
+        v, p, rest... = num_solver(agent,model)
+        if length(rest) > 0
+            push!(random_list, rest[1])
+        end
         p = normalize_position(p,model)
         agent.vel = v
         agent.pos = p
     end
+    # println(random_list, length(random_list))
     model.hamiltonian = calc_hamiltonian(model)
     model.dH = calc_dH(model)
     model.no_disp_H = calc_no_disp_hamiltonian(model)
     model.dist12 = euclidean_distance(model[model.a1], model[model.a2], model)
+    model.straight = calc_straightness(model)
+    # model.stoch_dH = calc_stoch_dH(model, random_list)
 end
 
 
@@ -327,15 +335,56 @@ function calc_no_disp_hamiltonian(model)
 end
 
 function calc_dH(model)
-    return sum([model.λ*norm(i.vel)*norm(i.uᵢ - i.vel) for i in allagents(model)])
+    # return sum([model.λ*norm(i.vel)*norm(i.uᵢ - i.vel) for i in allagents(model)])
+    return sum([model.λ*transpose(i.vel)*(i.uᵢ - i.vel) for i in allagents(model)])
 end
-    
+
+# ddU
+function ddU(a1, a2, model)
+    x = get_direction(a1.pos,a2.pos,model) # x
+    dist = euclidean_distance(a1,a2,model)
+    val_ddU = -model.A*( 
+        (1/dist)*(I - (x*transpose(x)/dist^2)) - (1/(model.B*dist^2))*(x*transpose(x)/dist^2)
+        ) * exp(-dist/model.B)
+    return tr(val_ddU)
+end
+# trace of the hessian of H(z(t))
+function calc_trace_ddH(model)
+    total_ddU = 0
+    for i in allagents(model)
+        for j in allagents(model)
+            if i.id != j.id
+                total_ddU += ddU(i,j,model)
+            end
+        end
+    end
+    return (model.sigma^2/4)*total_ddU + (model.sigma^2/2)*nagents(model)
+end
+
+function calc_stoch_dH(model, random_list)
+    if length(random_list) == 0
+        return 0
+    end
+    dW = rand(Normal(0, sqrt(model.dt)),2)
+    # println(dW)
+    drift_H = calc_dH(model) + calc_trace_ddH(model)
+    # diffu_H = model.sigma * sum(transpose(i.vel) * dW for i in allagents(model))
+    diffu_H = model.sigma * sum(transpose(i.vel) * ones(2)*random_list[i.id] for i in allagents(model))
+    return (drift_H + diffu_H)
+end
+
+function calc_straightness(model)
+    # return mean([norm(i.uᵢ)/norm(i.vel) for i in allagents(model)])
+    return mean([transpose(i.vel)*(i.uᵢ) for i in allagents(model)])
+end
+   
+
 
 # Add agents with random initial positions/velocities
 function initialize(number_of_peds::Int64 = 4, x_len::Real = 11, y_len::Real = 5, num_solver=euler_step, 
     properties::Union{Nothing,Dict} = nothing; seed::Union{Nothing,Int64} = nothing)
     if isnothing(properties)
-        properties = Dict(:λ => 2, :A => 5, :B => 0.3, :hamiltonian => 0.0, :dH => 0.0, :no_disp_H => 0.0, :dt => 0.01, :sigma => 0.1, :dist12 => 0.0, :a1=>1, :a2=>2)
+        properties = Dict(:λ => 2, :A => 5, :B => 0.3, :hamiltonian => 0.0, :dH => 0.0, :no_disp_H => 0.0, :dt => 0.01, :sigma => 0.1, :dist12 => 0.0, :a1=>1, :a2=>2, :straight => 0.0, :stoch_dH => 0.0)
     end
     rng = Xoshiro(seed)
     space = ContinuousSpace((x_len, y_len); periodic = true, spacing=0.25)
@@ -354,12 +403,12 @@ function initialize(number_of_peds::Int64 = 4, x_len::Real = 11, y_len::Real = 5
             # pos = Agents.normalize_position(SVector{2}([i,i]),model),
             pos = [rand(rng)*x_len, rand(rng)*y_len],  # Initial position
             vel = [0.0,0.0], # Initial velocity
-            uᵢ = mod(i,4) == 0 ? [1,0] : mod(i,4) == 1 ? [-1,0] : mod(i,4) == 2 ? [0, 1] : [0, -1], # custom
+            # uᵢ = mod(i,4) == 0 ? [1,0] : mod(i,4) == 1 ? [-1,0] : mod(i,4) == 2 ? [0, 1] : [0, -1], # custom
             # uᵢ = mod(i,3) == 0 ? [1,0] : mod(i,3) == 1 ? [-1,0] : [1,1], # custom
             # uᵢ = mod(i,2) == 0 ? [1,0] : [-1,0] # counter_flow
             # uᵢ = mod(i,2) == 0 ? [0,1] : [1,0] # cross
-            # uᵢ = [1.0,0.0]
-            # uᵢ = [0,0]
+            # uᵢ = [1.0,0.0] # uni flow
+            uᵢ = [0,0]
         )
     end
     return model

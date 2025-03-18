@@ -2,7 +2,7 @@ begin
     seed = 42
     properties = Dict(
         :λ => 2, 
-        :A => 5, 
+        :A => 0, 
         :B => 0.3, 
         :dt => 0.01, 
         :sigma => 0.2,
@@ -11,18 +11,20 @@ begin
         :no_disp_H => 0.0,
         :dist12 => 0.0,
         :a1 => 1,
-        :a2 => 1
+        :a2 => 3,
+        :straight => 0.0
     )
-    number_of_peds = 100
+    number_of_peds = 32
     x_len = 11
     y_len = 5
-    T = 15000
-    name = "cross_$(number_of_peds)_$(properties[:A])"
+    T = 10000
+    name = "stochastic_crys"
+    solver = stochastic_ode_step
 end
 function run_model(num_solver)
     model = initialize(number_of_peds, x_len, y_len, num_solver, properties; seed)
     @time begin
-        mdata = [:hamiltonian, :dH, :no_disp_H] # max hamiltonian @ step 323
+        mdata = [:hamiltonian, :dH, :no_disp_H, :straight] # max hamiltonian @ step 323
         adata = [:pos, :vel]
         adf, mdf = Agents.run!(model,T;mdata,adata)
         data = mdf[:,:dH];
@@ -36,10 +38,10 @@ function run_model(num_solver)
     end
 return model, adf, mdf
 end
-model = initialize(number_of_peds, x_len, y_len, leapfrog_step, properties; seed)
+model = initialize(number_of_peds, x_len, y_len, solver, properties; seed)
 @time begin
-    mdata = [:hamiltonian, :dH, :no_disp_H] # max hamiltonian @ step 323
-    adata = [:pos, :vel]
+    mdata = [:hamiltonian, :dH, :no_disp_H, :straight] # max hamiltonian @ step 323
+    adata = [:pos, :vel, :uᵢ]
     adf, mdf = Agents.run!(model,T;mdata,adata)
     data = mdf[:,:dH];
     # fig, ax = CairoMakie.lines(data)
@@ -59,7 +61,8 @@ CairoMakie.axislegend()
 ax.ylabel = "H"
 ax.xlabel = "time-step [t]"
 fig
-save("./Images/H_$name.png",fig)
+# save("./Images/collective_deterministic/H_$name.png",fig)
+save("./Images/basic_dynamics/H_$name.png",fig)
 end
 begin
     fig, ax = CairoMakie.lines(mdf[2:end,:dH])
@@ -68,12 +71,24 @@ begin
     # ax.xticks = 1:1000:4000
     ax.xlabel = "time-step [t]"
     fig
-    save("./Images/dH_$name.png",fig)
-end    
+    # save("./Images/collective_deterministic/dH_$name.png",fig)
+    save("./Images/basic_dynamics/dH_$name.png",fig)
+end
 begin
     CairoMakie.activate!()
-    x = 14900
-    path_length = 100
+    fig, ax = CairoMakie.lines(mdf[1:end,:straight])
+    # CairoMakie.lines!(mdf[2:end,:straight], label = L"H^*", linestyle=:dash)
+    # CairoMakie.axislegend()
+    ax.ylabel = L"Alignment: $p^T u$"
+    ax.xlabel = "time-step [t]"
+    fig
+    # save("./Images/collective_deterministic/straight_$name.png",fig)
+    save("./Images/basic_dynamics/straight_$name.png",fig)
+    end
+begin
+    CairoMakie.activate!()
+    x = 9000
+    path_length = 1000
     fig = Figure()
     ax = Axis(fig[1, 1], limits = (0,x_len,0,y_len), xlabel = "x_pos", ylabel = "y_pos")
     # ax = Axis(fig[1, 1], limits = (0,11,0,5), xlabel = "x_pos", ylabel = "y_pos",
@@ -81,24 +96,24 @@ begin
         # title = "Agent Trajectories :@t=$(x+path_length) | $name Flow")
     # scatter!(ax, adf[adf.id .== 5, :].pos[1:end], markersize=2 )
     for i in 1:number_of_peds
-        if mod(i,4) == 0
-            scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Reds, markersize=6)
+        if mod(i,2) == 0
+            # scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Reds, markersize=4)
             # scatter!(ax, adf[adf.id .== i, :].pos[2:end], markersize=2, color=:red)
             # scatter!(ax, adf[adf.id .== i, :].pos[1:1], markersize=10, color=:red)
-        elseif mod(i,4) == 1
-            scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Greens, markersize=6)
-            # scatter!(ax, adf[adf.id .== i, :].pos[2:end], markersize=2, color=:green)
-            # scatter!(ax, adf[adf.id .== i, :].pos[1:1], markersize=10, color=:green)
-        elseif mod(i,4) == 2
-            scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Blues, markersize=6)
+        # elseif mod(i,4) == 1
+            # scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Purples, markersize=4)
+        #     # scatter!(ax, adf[adf.id .== i, :].pos[2:end], markersize=2, color=:green)
+        #     # scatter!(ax, adf[adf.id .== i, :].pos[1:1], markersize=10, color=:green)
+        # elseif mod(i,4) == 2
+        #     scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Blues, markersize=4)
         else
-            scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Purples, markersize=6)
+            # scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Greens, markersize=4)
         end
-        # scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Reds)
-        # scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Reds, markersize=4)
+        scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Reds, markersize=4)
         # scatter!(ax, adf[adf.id .== i, :].pos[1:end], markersize=2 )
     end
-    save("./Images/$(name)flow_$(x+path_length).png", fig)
+    # save("./Images/collective_deterministic/$(name)_$(x+path_length).png", fig)
+    save("./Images/basic_dynamics/traj_$(name)_$(x+path_length).png",fig)
     fig
 end
 
@@ -118,3 +133,13 @@ begin
     lines!(ax, norm_speed2)
     fig
 end
+
+
+scatter([transpose(i.vel)*i.uᵢ for i in Agents.allagents(model)])
+
+vel_list = [map(x -> transpose(x)*i.uᵢ, adf[adf.id .== i.id, :].vel[1500:end]) for i in Agents.allagents(model)]
+fig,ax = scatter(vel_list[1])
+for i in 2:length(vel_list)
+    scatter!(ax, vel_list[i])
+end
+fig

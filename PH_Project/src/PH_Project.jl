@@ -6,7 +6,7 @@ module PH_Project
 # import Statistics: mean
 include("./module_ph_ped.jl")
 
-export Agents, Random, DifferentialEquations, DiffEqPhysics
+export Agents, Random, DifferentialEquations, DiffEqPhysics, Distributions, LinearAlgebra
 # export CairoMakie, GLMakie, DataFrame
 export norm, mean
 export Pedestrian
