@@ -2,29 +2,30 @@ begin
     seed = 42
     properties = Dict(
         :λ => 2, 
-        :A => 0, 
+        :A => 5, 
         :B => 0.3, 
         :dt => 0.01, 
-        :sigma => 0.2,
+        :sigma => 0.5,
         :hamiltonian => 0.0,
         :dH => 0.0,
         :no_disp_H => 0.0,
-        :dist12 => 0.0,
-        :a1 => 1,
-        :a2 => 3,
-        :straight => 0.0
+        # :dist12 => 0.0,
+        # :a1 => 1,
+        # :a2 => 3,
+        :alignment => 0.0,
+        :stoch_dH => 0.0
     )
     number_of_peds = 32
     x_len = 11
     y_len = 5
-    T = 10000
-    name = "stochastic_crys"
-    solver = stochastic_ode_step
+    T = 4000
+    name = "crys"
+    solver = leapfrog_step
 end
 function run_model(num_solver)
     model = initialize(number_of_peds, x_len, y_len, num_solver, properties; seed)
     @time begin
-        mdata = [:hamiltonian, :dH, :no_disp_H, :straight] # max hamiltonian @ step 323
+        mdata = [:hamiltonian, :dH, :no_disp_H, :alignment] # max hamiltonian @ step 323
         adata = [:pos, :vel]
         adf, mdf = Agents.run!(model,T;mdata,adata)
         data = mdf[:,:dH];
@@ -40,7 +41,7 @@ return model, adf, mdf
 end
 model = initialize(number_of_peds, x_len, y_len, solver, properties; seed)
 @time begin
-    mdata = [:hamiltonian, :dH, :no_disp_H, :straight] # max hamiltonian @ step 323
+    mdata = [:hamiltonian, :dH, :no_disp_H, :alignment] # max hamiltonian @ step 323
     adata = [:pos, :vel, :uᵢ]
     adf, mdf = Agents.run!(model,T;mdata,adata)
     data = mdf[:,:dH];
@@ -61,8 +62,8 @@ CairoMakie.axislegend()
 ax.ylabel = "H"
 ax.xlabel = "time-step [t]"
 fig
-# save("./Images/collective_deterministic/H_$name.png",fig)
-save("./Images/basic_dynamics/H_$name.png",fig)
+save("./Images/collective_deterministic/H_$name.png",fig)
+# save("./Images/stochastic_basic/H_$name.png",fig)
 end
 begin
     fig, ax = CairoMakie.lines(mdf[2:end,:dH])
@@ -71,19 +72,19 @@ begin
     # ax.xticks = 1:1000:4000
     ax.xlabel = "time-step [t]"
     fig
-    # save("./Images/collective_deterministic/dH_$name.png",fig)
-    save("./Images/basic_dynamics/dH_$name.png",fig)
+    save("./Images/collective_deterministic/dH_$name.png",fig)
+    # save("./Images/stochastic_basic/dH_$name.png",fig)
 end
 begin
     CairoMakie.activate!()
-    fig, ax = CairoMakie.lines(mdf[1:end,:straight])
-    # CairoMakie.lines!(mdf[2:end,:straight], label = L"H^*", linestyle=:dash)
+    fig, ax = CairoMakie.lines(mdf[1:end,:alignment])
+    # CairoMakie.lines!(mdf[2:end,:alignment], label = L"H^*", linestyle=:dash)
     # CairoMakie.axislegend()
     ax.ylabel = L"Alignment: $p^T u$"
     ax.xlabel = "time-step [t]"
     fig
-    # save("./Images/collective_deterministic/straight_$name.png",fig)
-    save("./Images/basic_dynamics/straight_$name.png",fig)
+    save("./Images/collective_deterministic/straight_$name.png",fig)
+    # save("./Images/stochastic_basic/straight_$name.png",fig)
     end
 begin
     CairoMakie.activate!()
@@ -112,8 +113,8 @@ begin
         scatter!(ax, adf[adf.id .== i, :].pos[x:x+path_length], color = 0:path_length, colormap = :Reds, markersize=4)
         # scatter!(ax, adf[adf.id .== i, :].pos[1:end], markersize=2 )
     end
-    # save("./Images/collective_deterministic/$(name)_$(x+path_length).png", fig)
-    save("./Images/basic_dynamics/traj_$(name)_$(x+path_length).png",fig)
+    save("./Images/collective_deterministic/$(name)_$(x+path_length).png", fig)
+    # save("./Images/stochastic_basic/traj_$(name)_$(x+path_length).png",fig)
     fig
 end
 

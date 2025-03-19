@@ -40,6 +40,4 @@ rubber.cache
 
 # particulars
 /figures/other
-MPI_Docs.md
-.vscode
-_minted-Alvi_Thesis_SPH
+/_minted-Alvi_Thesis_SPH

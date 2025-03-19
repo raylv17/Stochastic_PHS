@@ -9,18 +9,16 @@ begin
         :hamiltonian => 0.0, 
         :dH => 0.0,
         :no_disp_H => 0.0,
-        :dist12 => 0.0,
-        :a1 => 1,
-        :a2 => 3,
-        :straight => 0.0,
+        :alignment => 0.0,
         :stoch_dH => 0.0
     )
     number_of_peds = 32
     x_len = 11
     y_len = 5
-    timesteps = 4000
+    timesteps = 10000
     runs = 3
-    name = "crys"
+    name = "counter"
+    startat = 30
 end
 
 @time begin
@@ -38,7 +36,7 @@ end
     #     model = initialize(number_of_peds,x_len, y_len, leapfrog_step, properties; seed)
     #     model.sigma = 0
     #     adata = [:pos, :vel]
-    #     mdata = [:hamiltonian, :dH, :no_disp_H, :straight]
+    #     mdata = [:hamiltonian, :dH, :no_disp_H, :alignment]
     #     adf, mdf = @time Agents.run!(model,timesteps;mdata,adata)
     #     ###################
     #     # std_H = std_range(mdf[:,:hamiltonian], 100)
@@ -52,13 +50,13 @@ end
     #     CairoMakie.lines!(ax1, mdf[2:end, :no_disp_H], linestyle=:dash, label=L"H^*")
     #     CairoMakie.lines!(ax1, mdf[2:end,:hamiltonian],color=:black, label="σ = 0")
     #     CairoMakie.lines!(ax2, mdf[2:end,:dH],color=:black, label="σ = 0")
-    #     CairoMakie.lines!(ax3, mdf[2:end,:straight],color=:black, label="σ = 0")
+    #     CairoMakie.lines!(ax3, mdf[2:end,:alignment],color=:black, label="σ = 0")
     # end
         
     ## Sigma 0.2 # 3 runs
     begin
-        # for (sig, clr) in zip([0.7], [:magenta, :orange, :blue, :green, :red])
-        for (sig, clr) in zip([0.5,0.3,0.2,0.1,0.05], [:magenta, :orange, :blue, :green, :red])
+        # for (sig, clr) in zip([1.0], [:magenta, :orange, :blue, :green, :red])
+        for (sig, clr) in zip([1.0,0.5,0.2,0.1,0.05], [:magenta, :orange, :blue, :green, :red])
             properties[:sigma] = sig
             all_dh = []
             all_ham = []
@@ -66,7 +64,7 @@ end
             for i in 1:runs
                 model = initialize(number_of_peds,x_len, y_len, stochastic_ode_step, properties; seed)
                 adata = [:pos]
-                mdata = [:hamiltonian, :dH, :straight, :stoch_dH]
+                mdata = [:hamiltonian, :dH, :alignment, :stoch_dH]
                 print("$i - $sig |")
                 adf, mdf = @time Agents.run!(model,timesteps;mdata,adata)
                 ################
@@ -81,11 +79,11 @@ end
                 push!(all_ham, mdf[:,:hamiltonian])
                 push!(all_dh, mdf[:,:stoch_dH])
                 # push!(all_dh, diff(mdf[2:end,:hamiltonian])) # for stochastic dH
-                push!(all_aligns, mdf[:,:straight])
+                push!(all_aligns, mdf[:,:alignment])
                 CairoMakie.lines!(ax1, mdf[2:end,:hamiltonian]  , color = clr, alpha=0.2)
                 CairoMakie.lines!(ax2, mdf[1:end,:stoch_dH]           , color = clr, alpha=0.2) 
                 # CairoMakie.lines!(ax2, diff(mdf[2:end,:hamiltonian]), color = clr, alpha=0.2) # for stochastic dH
-                CairoMakie.lines!(ax3, mdf[2:end,:straight]           , color = clr, alpha=0.2)
+                CairoMakie.lines!(ax3, startat:Agents.abmtime(model)+1, mdf[startat:end,:alignment]         , color = clr, alpha=0.2)
                 fig1
                 fig2
             end
@@ -121,7 +119,7 @@ end
                 end
                 push!(mean_list, summ/length(all_ham))
             end
-            CairoMakie.lines!(ax3, mean_list[2:end], color = clr, label="σ = $sig")
+            CairoMakie.lines!(ax3, startat:Agents.abmtime(model)+1, mean_list[startat:end], color = clr, label="σ = $sig")
             # CairoMakie.lines!(ax2,  std_dH[1][2:end], mean_list[2:end], color = clr, label="σ = $sig")
         end
     end
@@ -133,7 +131,7 @@ end
         model = initialize(number_of_peds,x_len, y_len, leapfrog_step, properties; seed)
         model.sigma = 0
         adata = [:pos]
-        mdata = [:hamiltonian, :dH, :no_disp_H, :straight, :stoch_dH]
+        mdata = [:hamiltonian, :dH, :no_disp_H, :alignment, :stoch_dH]
         print("1 - $(model.sigma) |")
         adf, mdf = @time Agents.run!(model,timesteps;mdata,adata)
         ###################
@@ -146,18 +144,18 @@ end
         ###################
         CairoMakie.lines!(ax1, mdf[2:end,:hamiltonian],color=:black, label="σ = 0")
         CairoMakie.lines!(ax2, mdf[2:end,:dH],color=:black, label="σ = 0")
-        CairoMakie.lines!(ax3, mdf[2:end,:straight],color=:black, label="σ = 0")    
-        CairoMakie.lines!(ax1, mdf[2:end, :no_disp_H], linestyle=:dash, label=L"H^*")
+        CairoMakie.lines!(ax3, startat:Agents.abmtime(model)+1, mdf[startat:end,:alignment],color=:black, label="σ = 0")    
+        CairoMakie.lines!(ax1, mdf[10:end, :no_disp_H], linestyle=:dash, label=L"H^*")
     end
     CairoMakie.axislegend(ax1, position=:rb) # H
     CairoMakie.axislegend(ax2, position=:rt) # dH
     CairoMakie.axislegend(ax3, position=:rb) # Alignment
-    save("Images/stochastic_basic/H_stochasic_$name.png", fig1)
-    save("Images/stochastic_basic/dH_stochasic_$name.png", fig2)
-    save("Images/stochastic_basic/align_stochastic_$name.png", fig3)
-    fig2
+    save("Images/stochastic_collective/H_stochasic_$name.png", fig1)
+    save("Images/stochastic_collective/dH_stochasic_$name.png", fig2)
+    save("Images/stochastic_collective/align_stochastic_$name.png", fig3)
+    fig3
 end
-fig2
+fig3
 
 
 fig1
@@ -166,16 +164,23 @@ fig3
 
 
 # ###############
+model = initialize(number_of_peds,x_len, y_len, leapfrog_step, properties; seed)
 begin
-model = initialize(number_of_peds,x_len, y_len, stochastic_ode_step, properties; seed)
-model.sigma = 0.8
+model.sigma = 0
+model.dt = 0.01
 adata = [:pos, :vel]
-mdata = [:hamiltonian, :dH, :no_disp_H, :stoch_dH]
-adf, mdf = @time Agents.run!(model,2000;mdata,adata)
+mdata = [:hamiltonian, :dH, :no_disp_H, :stoch_dH, :alignment]
+adf, mdf = @time Agents.run!(model,100;mdata,adata)
 end;
 
 
-fig, ax = lines(mdf[1:end, :stoch_dH])
-lines!(ax, mdf[1:end, :dH])
-lines!(ax, diff(mdf[2:end,:hamiltonian])/model.dt)
+fig, ax = lines(mdf[20:end, :hamiltonian])
+lines!(ax, mdf[1:end, :no_disp_H], linestyle=:dash, label=L"H^*" )
+fig, ax = lines(mdf[20:end, :dH])
+
+# lines!(ax, mdf[1:end, :alignment])
+# lines!(ax, diff(mdf[2:end,:hamiltonian])/model.dt)
 fig
+
+mdf
+Agents.abmtime(model)

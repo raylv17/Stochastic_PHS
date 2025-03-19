@@ -13,7 +13,7 @@ This section serves to represent the microscopic dynamics of our pedestrian mode
 Given a port-Hamiltonian System (PHS), such as the one defined in \autoref{eq:ph_generalized}, it is able to gain energy from or dissipate energy to other interacting systems. Here, $z$ is the state of the system, $u$ is the input, and $y$ is the output of the system. Furthermore, $J \in \mathbb R^{n \times n}$ is a skew-symmetric matrix, $R \in \mathbb R^{n \times n}$ is a positive semi-definite matrix that represents dissipation from the system, and $B \in \mathbb R^{n \times m}$ where $ m \ll n$ being the coefficient for the input.
 
 One can achieve the classical Hamiltonian representation by assuming a system with no input, i.e. $B = 0$, and  no dissipation $R = 0$ as shown below using the first equation from \autoref{eq:ph_generalized}
-\begin{gather*}
+\begin{gather}
     \begin{aligned}
     \dot z(t) &= J \cdot \nabla H \\
     \begin{bmatrix}
@@ -29,7 +29,8 @@ One can achieve the classical Hamiltonian representation by assuming a system wi
         \partial H / \partial p
     \end{bmatrix} 
     \end{aligned}
-\end{gather*}
+    \label{eq:conservative}
+\end{gather}
 By setting the block matrices $I$ to size $n=1$, it can be demonstrated that the above equations yield the classical Hamiltonian equations, signifying that the skew-symmetry of $J$ is responsible for the conservation of the system.
 \begin{align*}
 \dot q = \dfrac{\partial H}{\partial p}, \quad \dot p = -\dfrac{\partial H}{\partial q}
@@ -76,7 +77,7 @@ Here,
 \end{gather}
 The resulting system is a linear input-state-output port-Hamiltonian system with dissipation. The Hamiltonian can now be defined as the total energy of the system, i.e. the sum of kinetic and potential energies
 \begin{align}
-    H(z(t)) = \dfrac{1}{2}||p(t)||^2 + \dfrac{1}{2}\sum_{i=1}^N\sum_{j=1}^NU(Q_{ij}(t))
+    H(z(t)) = \dfrac{1}{2}||p(t)||^2 + \dfrac{1}{2}\sum_{i=1}^N\sum_{j=i}^NU(Q_{ij}(t))
     \label{eq:Hamiltonian}
 \end{align}
 The gradient of the Hamiltonian would then be
@@ -84,7 +85,10 @@ The gradient of the Hamiltonian would then be
     \nabla H = 
     \begin{bmatrix}
         \partial H / \partial Q \\ \partial H / \partial p
-    \end{bmatrix}
+    \end{bmatrix} =
+    \begin{bmatrix}
+        \frac{1}{2}\nabla U(Q) \\ p
+    \end{bmatrix} 
     \label{eq:Hamiltonian_partial}
 \end{gather}
 
@@ -230,9 +234,9 @@ It can be observed that $M$ unfolds the relative velocities of pedestrians, rese
 Lastly, we represent the Hamiltonian
 \begin{gather*}
     \begin{aligned}
-        H = \frac{1}{2}(p_1^2 + p_2^2 + p_3^2) + \frac{1}{2}(&\nabla U_{12} + \nabla  U_{13} + \\  
-        &\nabla  U_{21} +\nabla  U_{23} + \\ 
-        &\nabla  U_{31} +\nabla  U_{32})
+        H = \frac{1}{2}(p_1^2 + p_2^2 + p_3^2) + \frac{1}{2}(& U(Q_{12}) +   U(Q_{13}) + \\  
+        &  U(Q_{21}) +  U(Q_{23}) + \\ 
+        &  U(Q_{31}) +  U(Q_{32})
     \end{aligned}    
 \end{gather*}
 
@@ -303,15 +307,15 @@ By showing the derivation of the same microscopic dynamics from the port-Hamilto
 Continuing from the stochastic induced dynamics of the microscopic model in \autoref{eq:stoch_micro}, we can use the port-Hamiltonian formulation of the deterministic dynamics \autoref{eq:ph_model} and represent it with the noise term.
 \begin{equation}
     \begin{aligned}
-        dz(t) &= (J-R)\nabla H(z(t))dt + \lambda \tilde u(t)dt + \sigma d\xi(t)\\
-        dy(t) &= \lambda \nabla H(z(t))dt
+        \d z(t) &= (J-R)\nabla H(z(t))\d t + \lambda \tilde u(t)\d t + \sigma \d \xi(t)\\
+        \d y(t) &= \lambda \nabla H(z(t))\d t
     \end{aligned}
     \label{eq:stoch_ph_model}
 \end{equation}
 Similar to \autoref{eq:matrixeq_ph}, and following the formulation from \cite{rudiger2024stability}, the matrix equation representation would become
 \begin{gather}
     \begin{bmatrix}
-        dQ \\ dp
+        \d Q \\ \d p
     \end{bmatrix} =
     \left(
     \begin{bmatrix}
@@ -325,14 +329,14 @@ Similar to \autoref{eq:matrixeq_ph}, and following the formulation from \cite{ru
     \begin{bmatrix}
         \frac{1}{2} \nabla U(Q) \\
         p 
-    \end{bmatrix}dt
+    \end{bmatrix}\d t
     + \lambda 
     \begin{bmatrix}
         0 \\ u
-    \end{bmatrix}dt
+    \end{bmatrix}\d t
     + \sigma
     \begin{bmatrix}
-        0 \\ dW(t)
+        0 \\ \d W(t)
     \end{bmatrix}
     \label{eq:matrix_stoc_eq_ph}
 \end{gather}
@@ -342,22 +346,24 @@ This will be used as the basis of our stochastic system. Following from the dyna
 It can also be noted that the expression for the Hamiltonian \autoref{eq:Hamiltonian} will remain the same, since the stochastic terms are included within the momentum term $\dot p$. 
 
 \subsection{Macroscopic Observations from Hamiltonian Behavior}
-The time derivative of the Hamiltonian is derived by its taking the total derivative with respect to time:
+\label{section:stoch_derivative}
+
+The time derivative of the Hamiltonian is derived by taking the following chain rule:
 \begin{align*}
-    \dfrac{d}{dt}H(z(t)) = \nabla^T H(z(t))\cdot \dot z(t)
+    \dfrac{\d }{\d t}H(z(t)) = \nabla^T H(z(t))\cdot \dot z(t)
 \end{align*}
 Substituting $\dot z(t)$ from \autoref{eq:ph_model} denoting that $y = \lambda \nabla H$ and thus $y^T = \nabla^T H \lambda$, we get
 \begin{align*}
-    \dfrac{d}{dt}H(z(t)) = \nabla^T H(z(t))(J-R)\nabla H(z(t)) + \underbrace{\nabla^T H(z(t)) \lambda}_{y^T} \tilde u
+    \dfrac{\d }{\d t}H(z(t)) = \nabla^T H(z(t))(J-R)\nabla H(z(t)) + \underbrace{\nabla^T H(z(t)) \lambda}_{y^T} \tilde u
 \end{align*}
 Using the skew-symmetric property of $J$ that $x^TJx=0$ we can simplify and obtain the expression for the time derivative of the Hamiltonian.
 \begin{align}
-    \frac{d}{dt}H(z(t)) = y^Tz(t)\tilde u(t) - \nabla^T H(z(t))R \nabla H(z(t))
+    \frac{\d }{\d t}H(z(t)) = y^T(z(t))\tilde u(t) - \nabla^T H(z(t))R \nabla H(z(t))
 \end{align}
 
 Expanding the terms further by substituting the gradient of the Hamiltonian \autoref{eq:Hamiltonian_partial} and the definition of $R$ \autoref{eq:JRM} can help us further simplify the expression giving us the following energy balance
 \begin{align}
-    \dfrac{d}{dt}H(z(t)) &= \lambda \nabla^T H(z(t)) \tilde u - \nabla^T H(z(t)) R \nabla H(z(t)) \nonumber \\
+    \dfrac{\d }{\d t}H(z(t)) &= \lambda \nabla^T H(z(t)) \tilde u - \nabla^T H(z(t)) R \nabla H(z(t)) \nonumber \\
     &\begin{aligned}
         &= \lambda 
         \begin{bmatrix}
@@ -383,7 +389,7 @@ Expanding the terms further by substituting the gradient of the Hamiltonian \aut
         &= \lambda p^T u - \lambda  p^T p \\ 
         &= \lambda p^T (u - p) \\ 
     \end{aligned} \nonumber \\
-    \dfrac{d}{dt}H(z(t))&= \lambda \langle p(t),u(t)-p(t) \rangle
+    \dfrac{\d }{\d t}H(z(t))&= \lambda \langle p(t),u(t)-p(t) \rangle
     \label{eq:dH}
 \end{align}
 
@@ -394,16 +400,67 @@ With this, we can confirm the following claims
 \begin{itemize}
     \item The Hamiltonian remains constant $\frac{d}{dt}H(z(t)) = 0$ for all times $t \geq 0$ if the system has no dissipation $\lambda = 0$. 
     \begin{align*}
-        \forall t \geq 0,\quad \dfrac{d}{dt}H(z(t)) = 0 \qquad \text{if} \qquad \lambda = 0
+        \forall t \geq 0,\quad \dfrac{\d }{\d t}H(z(t)) = 0 \qquad \text{if} \qquad \lambda = 0
     \end{align*}
     Reiterating that purely Hamiltonian behavior is indeed conservative.
     \item If the desired velocities are zero, i.e. $u = 0$, then the Hamiltonian decreases over time
     \begin{align*}
-        \forall t \geq 0,\quad \dfrac{d}{dt}H(z(t)) \leq 0 \qquad \text{if} \qquad \forall i,\; u_i = 0
+        \forall t \geq 0,\quad \dfrac{\d }{\d t}H(z(t)) \leq 0 \qquad \text{if} \qquad \forall i,\; u_i = 0
     \end{align*}
     Since the system is allowed to dissipate without input feed, the asymptotic behavior would yield crystallization, i.e. the pedestrians would stop moving.
     \item If all the pedestrians move at their desired velocities, i.e. $p(t) = u(t)$, then the time derivative is zero
     \begin{align*}
-        \dfrac{d}{dt} H(z(t) = 0 \qquad \text{if} \qquad \forall i,\; p_i(t) = u_i(t)
+        \dfrac{\d }{\d t} H(z(t)) = 0 \qquad \text{if} \qquad \forall i,\; p_i(t) = u_i(t)
     \end{align*}
 \end{itemize}
+
+\textbf{Stochastic Hamiltonian Case:}
+
+The expression for the stochastic derivative of the Hamiltonian $dH(z)$ can be derived using Ito's Lemma on the Hamiltonian $H(z)$:
+\begin{equation*}
+    \d H(z(t)) = \nabla^T H(z(t)) \d z(t) + \dfrac{\sigma^2}{2}\text{Tr}\{\nabla^2H(z(t))\}\d t
+\end{equation*}
+With the last term being the trace $\text{Tr\{\}}$ of the Hessian $\nabla^2$ of the Hamiltonian $H$.
+Substituting $\d z(t)$ from \autoref{eq:stoch_ph_model} and following the same steps as before will give us
+\begin{gather*}
+    \begin{aligned}
+        \d H(z(t)) = \underbrace{\L H(z(t))\d t}_{\text{drift}} + \underbrace{\sigma \nabla^T H(z(t)) \d \xi}_{\text{diffusion}}
+    \end{aligned}
+\end{gather*}
+Where $\L$ can be denoted as the infinitesimal generator of \autoref{eq:stoch_ph_model} with Hamiltonian as the potential function \cite{rudiger2024stability}, containing all the drift terms:
+\begin{gather*}
+    \begin{aligned}
+        \L H(z(t)) &= y^T(z(t))\tilde u(t) - \nabla^T H(z(t))R \nabla H(z(t)) + \dfrac{\sigma^2}{2}\text{Tr}\{\nabla^2H(z(t))\} 
+        % \\ &= \lambda p^T(u-p) + \dfrac{\sigma^2}{2}\sum_{i=1} \sum_{j \neq i }\nabla^2 U(Q_{ij}) + \dfrac{\sigma^2}{2}N
+    \end{aligned}
+\end{gather*}
+We see that the first two terms of the drift part simplifies to the same expression as before \autoref{eq:dH} from the deterministic case: $\lambda p^T(u-p)$. The last term is summation of all diagonal entries in the Hessian of $H$, we can simplify this as follows:
+\begin{align}
+    \text{Tr}\{\nabla^2H(z(t))\} &= \sum^N_{i=1}\sum^N_{j\neq i} \dfrac{\partial^2 H}{\partial Q_{ij}} + \sum^N_{i=1} \dfrac{\partial^2 H}{\partial p_i} \nonumber\\
+    &= \dfrac{1}{2}\sum^N_{i=1}\sum^N_{j\neq i} \dfrac{\partial \nabla U(Q_{ij}) }{\partial Q_{ij}} + \sum^N_{i=1} \dfrac{\partial p_i}{\partial p_i} \nonumber \\
+    &= \dfrac{1}{2}\sum^N_{i=1}\sum^N_{j\neq i} \text{Tr}\{\nabla^2 U(Q_{ij})\}+ N
+    \label{eq:trace_ddH}
+    % \\ &= \lambda p^T(u-p) + \dfrac{\sigma^2}{2}\sum_{i=1} \sum_{j \neq i }\nabla^2 U(Q_{ij}) + \dfrac{\sigma^2}{2}N
+\end{align}
+Here, $\nabla^2U(x)$ is defined as \autoref{eq:def_ddU}, and $N$ is the number of pedestrians. Next, we'll move on to the diffusion term, and simplify it
+\begin{gather*}
+    \begin{aligned}
+        \nabla^T H(z(t))\sigma \d \xi &= \sigma
+        \begin{bmatrix}
+            \partial H / \partial Q & \partial H / \partial p
+        \end{bmatrix}
+        \begin{bmatrix}
+            0 \\ \d W
+        \end{bmatrix} \\
+        &= \sigma p^T \d W
+    \end{aligned}
+\end{gather*}
+Combining the simplified drift and diffusion terms leads to the stochastic derivative of the Hamiltonian.
+\begin{gather}
+    \begin{aligned}
+    % \d H(z(t)) &= \lambda p^T (u -p) \d t + \sigma p^T \d W \\
+    \d H(z(t)) &=\left(\lambda p^T(u-p) + \dfrac{\sigma^2}{4}\sum^N_{i=1} \sum^N_{j \neq i }\text{Tr}\{\nabla^2 U(Q_{ij})\} + \dfrac{\sigma^2}{2}N\right)\d t + \sigma p^T \d W
+    % \d H(z(t)) &= \sigma \langle p, u-p\rangle \d t + \sigma \langle p, \d W \rangle
+    \end{aligned}
+    \label{eq:stoch_dH}
+\end{gather}

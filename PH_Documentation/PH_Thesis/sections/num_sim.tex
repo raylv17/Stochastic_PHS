@@ -1,5 +1,5 @@
 \section{Numerical Schemes and Simulation}
-After establishing that the dynamics of our microscopic model possesses Hamiltonian structure, we can now show these dynamics in action through simulations. In this section we will compare three numerical schemes: explicit Euler, implicit Euler, and Leapfrog, how they are constructed for our model; and how they compare with each other. Furthermore, we construct a solver using the implicit Euler-Maruyama scheme for the stochastic port-Hamiltonian case. For the simulation, the following JuliaLang packages are extensively utilized, \texttt{Agents.jl} and \texttt{DifferentialEquations.jl}.
+After establishing that the dynamics of our microscopic model possesses Hamiltonian structure, we can now show these dynamics in action through simulations. In this section we will construct and compare schemes for both the stochastic and deterministic models. For the simulation, the following JuliaLang packages are extensively utilized, \texttt{Agents.jl} and \texttt{DifferentialEquations.jl}. All the code in this section can be found in the project directory \texttt{./PH\_Project/src/module\_ph\_ped.jl}.
 
 \subsection{Model Setup}
 The simulation is run on a fixed model setup as shown in \autoref{code:model_init}. Here we initialize the values for the number of pedestrians, the extent of the domain in 2D, the desired velocities of the pedestrians, and the parameter values of $\lambda$, $A$, $B$, and $\sigma$.
@@ -66,6 +66,7 @@ for i in 1:number_of_peds
         u?\sub{i}? = [1.0,0.0] # uni-directional flow
         # u?\sub{i}? = mod(i,2) == 0 ? [1,0] : [-1,0] # counter_flow
         # u?\sub{i}? = mod(i,2) == 0 ? [0,1] : [1,0] # cross_flow
+        # u?\sub{i}? = [0.0, 0.0] # no desired velocity : crystallization
     )
 end
 \end{minted}
@@ -77,14 +78,21 @@ We can also now define a \texttt{model\_step!} function \autoref{code:model_step
 \begin{listing}[H]
 \begin{minted}[escapeinside=??, frame=single, fontsize=\small]{julia}
 function model_step!(model,num_solver)
+    random_list = [] # for sdesolver
     for agent in allagents(model)
-        v, p = num_solver(agent,model)
-        p = normalize_position(p,model) # for periodic boundaries
+        v, p, rest... = num_solver(agent,model)
+        if length(rest) > 0
+            push!(random_list, rest[1])
+        end
+        p = normalize_position(p,model)
         agent.vel = v
         agent.pos = p
     end
     model.hamiltonian = calc_hamiltonian(model)
     model.dH = calc_dH(model)
+    model.no_disp_H = calc_no_disp_hamiltonian(model)
+    model.alignment = calc_alignment(model)
+    model.stoch_dH = calc_stoch_dH(model, random_list)
 end
 \end{minted}
 \caption{At each step simulation of the model, \texttt{model\_step!} updates the model parameters as well as the agent parameters.}
@@ -194,7 +202,7 @@ end
 \label{code:leapfrog}
 \end{listing}
 
-% \subsection{Using ODE solvers provided by \texttt{DifferentialEquations.jl}}
+
 \textbf{Using ODE solvers provided by \texttt{DifferentialEquations.jl}}
 
 To define implicit Euler method \autoref{eq:impliict_euler}, we make use of the package solvers. As per the directions of \texttt{DifferentialEquations.jl}, we first construct our \texttt{ODEProblem} based on the dynamics provided in \autoref{eq:diff_pq}
@@ -292,7 +300,8 @@ function ph_stoc_diffu!(du,u,p,t)
     agent, model = p
     vel, pos = u[1:2], u[3:4]
     @\textsigma@ = model.sigma
-    du[1:2] = [@\textsigma@,@\textsigma@] 
+    du[1] = @\textsigma@
+    du[2] = @\textsigma@
     du[3:4] = [0.0,0.0]
 end
 \end{minted}
@@ -300,31 +309,35 @@ end
 \label{code:sde_problem}
 \end{listing}
 
-And finally, we construct our solver to be used as another stepping function for our simulation. It can be seen how the stochastic component is added as a Wiener Process. The solver used for most simulations in the next section is the implicit Euler-Maruyama, however other solvers are also provided the package such as the \texttt{SImplicitMidpoint} \cite{rackauckas2017differentialequations}. This provides room for reassessment on the choice for the solver to be used, specially in a case such as ours that demands symplectic solvers.
+And finally, we construct our solver to be used as another stepping function for our simulation. It can be seen how the stochastic component is added as a Wiener Process. The solver used for most simulations in the next section is the Euler-Heun, however other solvers are also provided the package such as the \texttt{SImplicitMidpoint} \cite{rackauckas2017differentialequations}. This provides room for reassessment on the choice for the solver to be used, specially in a case such as ours that demands symplectic solvers \cite{hong2022symplectic}. 
+
+We induce ach element in the vector with a different random number. We also retrieve the randomly generated values (\texttt{wiener\_increment}) to be used for analysis and calculation of the stochastic derivative $\d H$.
 \begin{listing}[H]
     \begin{minted}[escapeinside=@@, frame=single, fontsize=\small]{julia}        
 function stochastic_ode_step(agent, model)
     u0 = [agent.vel[1], agent.vel[2], agent.pos[1], agent.pos[2]]
     tspan = (0.0, Inf)
     p = (agent, model)
-    W = WienerProcess(0.0, 0.0, 0.0)
-    prob = SDEProblem(ph_stoc_drift!,ph_stoc_diffu!,u0, tspan, p, noise=W)
+    W = WienerProcess(0.0, zeros(2), zeros(2))
+    prob = SDEProblem(ph_stoc_drift!,ph_stoc_diffu!,u0, tspan, p, 
+                      noise=W, noise_rate_prototype=zeros(4, 2))
     
     # Use the model's integrator
-    integrator = init(prob, ImplicitEM(), dt=model.dt)
+    integrator = init(prob, EulerHeun(), dt=model.dt)
     
     # Solve and update agent state
     step!(integrator)
     vel = integrator.u[1:2]
     pos = integrator.u[3:4]
-    return vel, SVector{2}(pos)
+    wiener_increment = integrator.W.dW
+    return vel, SVector{2}(pos), wiener_increment
 end
 \end{minted}
-\caption{Solving the SDE using implicit Euler-Maruyama}
+\caption{Solving the SDE using Euler-Heun}
 \label{code:sde_solve}
 \end{listing}
 
-To summarize, in this section we've devised mainly four solvers: for the deterministic port-Hamiltonian model, we have explicit Euler, implicit Euler, and leapfrog; for the stochastic port-Hamiltonian model, we have implicit Euler-Maruyama method. We have allowed ourselves further flexibility by introducing packaged solvers. For the upcoming simulations in the remainder of this section, we will be using \autoref{code:ph_solver} for the implicit Euler as well as explicit Euler by changing the solver to \texttt{Euler}; and \autoref{code:leapfrog} for the leapfrog. Next, we will formulate functions to calculate the Hamiltonian in our model, and then compare the results obtained by each solver.
+To summarize, in this section we've devised mainly four solvers: for the deterministic port-Hamiltonian model, we have explicit Euler, implicit Euler, and leapfrog; for the stochastic port-Hamiltonian model, we have implicit Euler-Heun method. We have allowed ourselves further flexibility by introducing packaged solvers. For the upcoming simulations in the remainder of this section, we will be using \autoref{code:ph_solver} for the implicit Euler as well as explicit Euler by changing the solver to \texttt{Euler}; and \autoref{code:leapfrog} for the leapfrog. Next, we will formulate functions to calculate the Hamiltonian in our model, and then compare the results obtained by each solver.
 
 \subsection{Calculation of Hamiltonian}
 \label{section:calc_ham}
@@ -378,6 +391,69 @@ end
 \end{listing}
 
 \pagebreak
+\textbf{Stochastic Hamiltonian Calculation}
+
+Here, we calculate the stochastic derivative of the Hamiltonian, i.e. $\d H$ \autoref{eq:stoch_dH} for the parameter \texttt{:stoch\_dH} in \autoref{code:model_init}. The drift part includes the deterministic derivative of $H$ from \texttt{calc\_dH} \autoref{code:calc_dH} and calculates the trace of the Hessian of the Hamiltonian \texttt{calc\_trace\_ddH}. Whereas, the diffusion part is calculated separately. Finally, both values are summed to evaluate $\d H$. It can be seen that the function also takes \texttt{random\_list} as an argument, which is the list of randomly generated values retrieved from the SDE solver \autoref{code:sde_solve}.
+\begin{listing}[H]
+\begin{minted}[escapeinside=@@, frame=single, fontsize=\small]{julia}    
+function calc_stoch_dH(model, random_list)
+    if length(random_list) == 0
+        return 0
+    else
+        dW = random_list
+    end
+    @\textsigma@ = model.sigma
+    drift_H = calc_dH(model) + calc_trace_ddH(model)
+    diffu_H = @\textsigma@ * sum(transpose(i.vel) * dW[i.id] for i in allagents(model))
+    return (drift_H + diffu_H)
+end
+\end{minted}
+\caption{Stochastic derivative $\d H$ for the Hamiltonian as defined in \autoref{eq:stoch_dH}}
+\label{code:calc_stoch_H}
+\end{listing}
+
+The trace of the Hamiltonian \autoref{eq:trace_ddH} from \autoref{code:calc_stoch_H}, consists of the summation of the number of pedestrians $N$ and the trace of Hessian of the potential function, i.e $\text{Tr}\{\nabla^2 U(x)\}$ calculated for all pedestrian combination $i \neq j$.
+
+\begin{listing}[H]
+\begin{minted}[escapeinside=@@, frame=single, fontsize=\small]{julia}    
+function calc_trace_ddH(model)
+    total_ddU = 0
+    for i in allagents(model)
+        for j in allagents(model)
+            if i.id != j.id
+                total_ddU += ddU(i,j,model)
+            end
+        end
+    end
+    @\textsigma@ = model.sigma
+    return (@\textsigma@^2/4)*total_ddU + (@\textsigma@^2/2)*nagents(model)
+end
+\end{minted}
+\caption{Trace of the Hessian of the Hamiltonian $H$, from \autoref{eq:trace_ddH}}
+\label{code:calc_trace_ddH}
+\end{listing}
+
+The Hessian of the potential function, i.e. $\nabla^2 U(x)$, as defined in \autoref{eq:def_ddU} is first computed in \autoref{code:calc_ddU} and its trace is returned, which is then used in $\text{Tr}\{\nabla^2 H\}$ to be evaluated for the stochastic derivative of the Hamiltonian $\d H$.
+
+\begin{listing}[H]
+\begin{minted}[escapeinside=@@, frame=single, fontsize=\small]{julia}    
+function ddU(a1, a2, model)
+    x = get_direction(a1.pos,a2.pos,model) # x
+    dist = euclidean_distance(a1,a2,model)
+    val_ddU = - model.A*
+        ( 
+            (1/dist)*(I - (x*transpose(x)/dist^2)) - 
+            (1/(model.B*dist^2))*(x*transpose(x)/dist^2)
+        ) * exp(-dist/model.B)
+    return tr(val_ddU)
+end
+\end{minted}
+\caption{Hessian of U, \autoref{eq:def_ddU}, and then taking its trace as required in the stochastic derivative of the Hamiltonian}
+\label{code:calc_ddU}
+\end{listing}
+
+These functions are used to evaluate $\d H$ for the stochastic case, and study the plots that result from the simulation with differing values of the volatility $\sigma$. It can be observed that the equations of $\d H$ resolve to the deterministic derivative of the Hamiltonian when $\sigma = 0$. The inclusion of volatility $\sigma$ not only introduces the diffusion part, but also includes extra terms in the drift part of the derivative of the Hamiltonian. In contrast to the deterministic Hamiltonian which was only a function of the velocities of the pedestrians, the stochastic derivative is a function of the velocities as well as the relative positions $Q_{ij}$.
+
 \subsection{Comparison of Numerical Schemes}
 \label{section:compare_num_solvers}
 We can now compare the numerical schemes by determining how accurately they are describing the dynamics. This is done by evaluating the error, which is defined as the difference between the time derivative of the Hamiltonian at time-step $k$ and the difference between the Hamiltonian at time step $k$ and $k-1$, resulting in the following expression:
@@ -396,29 +472,29 @@ We concentrate once again to the deterministic port-Hamiltonian case, and run ou
     \centering
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/Uniflowdflow_101.png}
+        \includegraphics[width=\linewidth]{figures/ch4_uniflow/Uniflowdflow_101.png}
         \caption{Unidirectional flow [start]}
     \end{subfigure}
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/Uniflowdflow_4000.png}
+        \includegraphics[width=\linewidth]{figures/ch4_uniflow/Uniflowdflow_4000.png}
         \caption{Unidirectional flow [steady-state]}
     \end{subfigure}
     \caption{The progress of the simulation at (a) the start of the simulation and (b) after some time, reaching a steady state}
     \label{plot:uniflow_positions}
 \end{figure}
 
-\pagebreak
+
 It can be observed from \autoref{plot:uniflow_positions} how the pedestrians start from a random arrangement and gradually reach a steady state by achieving their desired unidirectional motion.
 \begin{figure}[H]
     \centering
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/H_Uniflow.png}
+        \includegraphics[width=\linewidth]{figures/ch4_uniflow/H_Uniflow.png}
     \end{subfigure}
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/dH_Uniflow.png}
+        \includegraphics[width=\linewidth]{figures/ch4_uniflow/dH_uni_4000dt.png}
     \end{subfigure}
     \caption{$H(z(t))$ and $\frac{d}{dt}H$ as the simulation progresses over time.}
     \label{plot:uniflow_hamiltonian}
@@ -430,13 +506,13 @@ As demonstrated in \autoref{plot:uniflow_hamiltonian} the change in Hamiltonian 
     \centering
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/manual_scheme_error1.png}
+        \includegraphics[width=\linewidth]{figures/ch4_uniflow/leapfrog_compare.png}
         \caption{Mean error of the schemes}
         \label{plot:scheme_error}
     \end{subfigure}
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/time1.png}
+        \includegraphics[width=\linewidth]{figures/ch4_uniflow/time1.png}
         \caption{Computation time of the schemes}
         \label{plot:scheme_time}
     \end{subfigure}
@@ -447,3 +523,4 @@ As demonstrated in \autoref{plot:uniflow_hamiltonian} the change in Hamiltonian 
 As one would expect the errors do increase when the $\delta \text{t}$ increases, however the stark contrast between the minute numerical errors of leapfrog scheme to others clearly shows the benefit of using symplectic schemes for solving Hamiltonian systems. The computation time of leapfrog here is similar to that of explicit Euler. Implicit Euler, on the other hand, yields results that are only slightly better than its explicit counterpart regarding errors. Due to its implicit nature, the implicit Euler also requires extra steps to numerically solve equations resulting it to be the most computationally expensive compared to the other two.
 
 With these results in mind, we conclude this section with leapfrog as our choice to be used for all deterministic dynamical models for our simulations in the coming section.
+

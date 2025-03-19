@@ -4,13 +4,13 @@ Collective dynamics is an interesting research area in many fields of study rang
     \centering
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/counter_40_2flow_10000.png}
+        \includegraphics[width=\linewidth]{figures/ch1_lane_stripe/counter_40_2flow_10000.png}
         \caption{Lane formation for counter flows}
         \label{plot:example_cross}
     \end{subfigure}
     \begin{subfigure}{.49\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/cross_40_2flow_10000.png}
+        \includegraphics[width=\linewidth]{figures/ch1_lane_stripe/cross_40_2flow_10000.png}
         \caption{Stripe formation for cross flows}
         \label{plot:example_counter}
     \end{subfigure}
@@ -31,9 +31,11 @@ Port-Hamiltonian systems theory is a relatively new, yet promising, paradigm to 
 
 \textbf{Overview and Objectives}
 
-The objective of this thesis is to represent the dynamics of the microscopic force-based pedestrian model through the port-Hamiltonian formulation. We establish that the port-Hamiltonian formulation is interchangeable with the agent-based formulation, signifying that the model possesses Hamiltonian structure. Once this is established, we devise that the Hamiltonian can be used as a measure to quantify macroscopic behavior of the overall model; and observe the relationship between the self-organized collective behavior and the overall system energy, i.e. the Hamiltonian. Next, we move on to the stochastic case, and subject the dynamics to additive noise. We investigate the dynamics of the stochastic port-Hamiltonian formulation of the model and observe its impact on the Hamiltonian measure as well as on the macroscopic collective behavior.
+The objective of this thesis is to represent the dynamics of the microscopic force-based pedestrian model through the port-Hamiltonian formulation. We establish that the port-Hamiltonian formulation is interchangeable with the agent-based formulation, signifying that the model possesses Hamiltonian structure. Once this is established, we devise that the Hamiltonian can be used as a measure to quantify macroscopic behavior of the overall model; and observe the relationship between the self-organized collective behavior and the overall system energy, i.e. the Hamiltonian. Next, we move on to the stochastic case, and subject the dynamics to additive noise. We investigate the dynamics of the stochastic port-Hamiltonian formulation of the model and observe its impact on the Hamiltonian measure as well as on the macroscopic collective behavior. We witness how minor addition of noise can also improve the self-organization in cross-flow compared to the case with no noise.
 
-To simulate the models, we keep in mind that the numerical method should be considerate of the energy of the system, and thus we compare different solvers and establish that symplectic methods are best suited for our port-Hamiltonian model. The agent-based models are made using the Julia programming language with \texttt{Agents.jl} \cite{Agents.jl} package. To add more flexibility and to easily compare a variety of different numerical solvers, we also make use of the \texttt{DifferentialEquations.jl} \cite{rackauckas2017differentialequations} package to construct our solvers, this proved useful paricularly for the stochastic port-Hamiltonian case.
+Furthermore, we also show the respective codes that were used in the model to create numerical solvers, and the functions needed to create the agent-based model. Next, a complete coding example is shown to demonstrate how the model is constructed and simulated with data collection, this step-by-step also includes code to plot the model attributes such as the Hamiltonian, and agent attributes such the pedestrian trajectories.
+
+To simulate the models, we keep in mind that the numerical method should be considerate of the energy of the system, and thus we compare different solvers and establish that symplectic methods are best suited for our port-Hamiltonian model. The agent-based models are made using the Julia programming language with \texttt{Agents.jl} \cite{Agents.jl} package. To add more flexibility and to easily compare a variety of different numerical solvers, we also make use of the \texttt{DifferentialEquations.jl} \cite{rackauckas2017differentialequations} package to construct our solvers, this proved useful particularly for the stochastic port-Hamiltonian case.
 
 
 

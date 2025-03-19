@@ -160,7 +160,8 @@ end
 
 function ode_step_exeuler(agent, model)
     u0 = [agent.vel[1], agent.vel[2], agent.pos[1], agent.pos[2]]
-    tspan = (0.0, Inf)print(" $(std(mdf[:,:hamiltonian])), $(std(mdf[:,:dH]))")
+    tspan = (0.0, Inf)
+    # print(" $(std(mdf[:,:hamiltonian])), $(std(mdf[:,:dH]))")
     p = (agent, model)
     prob = ODEProblem{true}(ph_model!, u0, tspan, p)
     
@@ -243,16 +244,17 @@ function ph_stoc_diffu!(du,u,p,t)
     vel, pos = u[1:2], u[3:4]
     σ = model.sigma
     # du[1:2] = σ.*vel
-    du[1:2] = [σ,σ] 
+    du[1] = σ
+    du[2] = σ
     du[3:4] = [0.0,0.0]
 end
 
 function stochastic_ode_step(agent, model)
     u0 = [agent.vel[1], agent.vel[2], agent.pos[1], agent.pos[2]]
     tspan = (0.0, Inf)
-    p = (agent, model)
-    W = WienerProcess(0.0, 0.0, 0.0)
-    prob = SDEProblem(ph_stoc_drift!,ph_stoc_diffu!,u0, tspan, p, noise=W)
+    p = (agent, model) 
+    W = WienerProcess(0.0, zeros(2), zeros(2))
+    prob = SDEProblem(ph_stoc_drift!,ph_stoc_diffu!,u0, tspan, p, noise=W ,noise_rate_prototype=zeros(4, 2))
     
     # Use the model's integrator
     # integrator = DifferentialEquations.init(prob, ImplicitEM(), dt=model.dt)
@@ -306,9 +308,9 @@ function model_step!(model,num_solver)
     model.hamiltonian = calc_hamiltonian(model)
     model.dH = calc_dH(model)
     model.no_disp_H = calc_no_disp_hamiltonian(model)
-    model.dist12 = euclidean_distance(model[model.a1], model[model.a2], model)
-    model.straight = calc_straightness(model)
-    # model.stoch_dH = calc_stoch_dH(model, random_list)
+    # model.dist12 = euclidean_distance(model[model.a1], model[model.a2], model)
+    model.alignment = calc_alignment(model)
+    model.stoch_dH = calc_stoch_dH(model, random_list)
 end
 
 
@@ -363,28 +365,33 @@ end
 
 function calc_stoch_dH(model, random_list)
     if length(random_list) == 0
+        # dW = [rand(Normal(0, sqrt(model.dt)),2) for _ in 1:nagents(model)] 
         return 0
+    else
+        dW = random_list # from sdesolver
     end
-    dW = rand(Normal(0, sqrt(model.dt)),2)
     # println(dW)
     drift_H = calc_dH(model) + calc_trace_ddH(model)
     # diffu_H = model.sigma * sum(transpose(i.vel) * dW for i in allagents(model))
-    diffu_H = model.sigma * sum(transpose(i.vel) * ones(2)*random_list[i.id] for i in allagents(model))
+    diffu_H = model.sigma * sum(transpose(i.vel) * dW[i.id] for i in allagents(model))
     return (drift_H + diffu_H)
 end
 
-function calc_straightness(model)
+function calc_alignment(model)
     # return mean([norm(i.uᵢ)/norm(i.vel) for i in allagents(model)])
-    return mean([transpose(i.vel)*(i.uᵢ) for i in allagents(model)])
+    return mean([transpose(i.vel/norm(i.vel))*(i.uᵢ) for i in allagents(model)])
 end
    
 
 
 # Add agents with random initial positions/velocities
-function initialize(number_of_peds::Int64 = 4, x_len::Real = 11, y_len::Real = 5, num_solver=euler_step, 
+"""
+(number_of_peds = 32, x_len = 11, y_len, num_solver; properties, seed)
+"""
+function initialize(number_of_peds::Int64 = 32, x_len::Real = 11, y_len::Real = 5, num_solver=euler_step, 
     properties::Union{Nothing,Dict} = nothing; seed::Union{Nothing,Int64} = nothing)
     if isnothing(properties)
-        properties = Dict(:λ => 2, :A => 5, :B => 0.3, :hamiltonian => 0.0, :dH => 0.0, :no_disp_H => 0.0, :dt => 0.01, :sigma => 0.1, :dist12 => 0.0, :a1=>1, :a2=>2, :straight => 0.0, :stoch_dH => 0.0)
+        properties = Dict(:λ => 2, :A => 5, :B => 0.3, :hamiltonian => 0.0, :dH => 0.0, :no_disp_H => 0.0, :dt => 0.01, :sigma => 0.1, :alignment => 0.0, :stoch_dH => 0.0)
     end
     rng = Xoshiro(seed)
     space = ContinuousSpace((x_len, y_len); periodic = true, spacing=0.25)

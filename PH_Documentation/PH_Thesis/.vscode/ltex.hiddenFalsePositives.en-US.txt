@@ -1,0 +1,5 @@
+{"rule":"EN_COMPOUNDS","sentence":"^\\QMulti-scale description of pedestrian collective dynamics with port-Hamiltonian systems\\E$"}
+{"rule":"EN_COMPOUNDS","sentence":"^\\QMicroscopic models are described by finite-dimensional PHS, which has been used to model various multi-agent systems including consensus and opinion formation \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q, swarm behavior \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q, multi-input multi-output agent systems \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
+{"rule":"LC_AFTER_PERIOD","sentence":"^\\QAnd loop through each agent.id and taking its positions within a certain time.\\E$"}
+{"rule":"LC_AFTER_PERIOD","sentence":"^\\QTo ignore the first initialized values when plotting the data, we run the model for a single time-step using Agents.step!(model).\\E$"}
+{"rule":"LC_AFTER_PERIOD","sentence":"^\\QWe loop through each agent.id and taking its positions within a certain time.\\E$"}
