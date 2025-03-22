@@ -38,7 +38,7 @@ The vector of relative positions $Q_i(t)$ of a pedestrian $i$ to all pedestrians
 The dynamics of the pedestrians are based on (i) short-range repulsion $U$ among pedestrians based on their distances from others and (ii) attraction $\lambda$ toward a desired velocity $u_i$. The microscopic dynamics for the pedestrian $i$ is given by the following equations:
 \begin{equation}
 \begin{aligned}
-    \dot Q_{i}(t) &= p_i(t) - p_j(t), &j = 1,\dots,N \quad j \neq i& & \dot Q_i(0) &= Q^0_i \\
+    \dot Q_{ij}(t) &= p_i(t) - p_j(t), &j = 1,\dots,N \quad j \neq i& & \dot Q_i(0) &= Q^0_i \\
     \dot p_i(t) &= \lambda(u_i(t) - p_i(t)) - \sum_{j \neq i} \nabla U (Q_{ij}(t)), && & \dot p_i(0) &= p^0_i
 \end{aligned}
 \label{eq:micro}
@@ -46,7 +46,7 @@ The dynamics of the pedestrians are based on (i) short-range repulsion $U$ among
 Here,
 \begin{itemize}
     \item $\lambda \in \mathbb{R}_{\geq 0}$, is a parameter for the relaxation rate. In other words, it determines the intensity to reach the desired velocity. 
-    \item $U(Q_{ij})$, is a nonlinear repulsive interaction potential. This determines the magnitude of repulsion of a pedestrian $i$ to other pedestrians $j$ as a function of relative position $Q_i = q_i - q_j$. It is defined as follows 
+    \item $U(Q_{ij})$, is a nonlinear repulsive interaction potential, such that it is always positive and convex. This determines the magnitude of repulsion of a pedestrian $i$ to other pedestrians $j$ as a function of relative position $Q_{ij} = q_i - q_j$. It is defined as follows 
     \begin{align} 
         U(x) : \mathbb{R}^2 \mapsto \mathbb{R}, \quad\quad U(x) = ABe^{-|x|/B}
         \label{eq:def_potU}
@@ -79,7 +79,7 @@ To study the stochastic variant of our model, and how they effect the overall dy
 Which is a combination of a deterministic component, denoted as the \textit{drift} term; and a stochastic component, denoted as the \textit{diffusion} term. In our case, we introduce an additive noise term $\sigma dW_i(t)$ to our deterministic model from before \autoref{eq:micro} resulting in \autoref{eq:stoch_micro}. To be able to have a better physical interpretation of the model, the noise is introduced in the momentum term, rather than the position term. So one can interpret this as agents moving randomly while maintaining a continuous motion, as opposed to randomly teleporting in different locations at every time-step.
 \begin{gather}
 \begin{aligned}
-    \d Q_{i}(t) &= (p_i(t) - p_j(t))\d t \\
+    \d Q_{ij}(t) &= (p_i(t) - p_j(t))\d t \\
     \d p_i(t) &= \lambda(u_i(t) - p_i(t))\d t - \sum_{j \neq i} \nabla U (Q_{ij}(t))\d t + \sigma \d W_i(t)
     \label{eq:stoch_micro}
 \end{aligned}
@@ -93,15 +93,15 @@ With the dynamics presented so far, we can observe the individual pedestrian's a
 
 To measure how much an agent $i$ is moving in the direction of its particular desired velocity $u_i$, we can take the following dot product.
 \begin{gather}
-    \text{Alignment} = \dfrac{p_i}{|p_i|} \cdot \dfrac{u_i}{|u_i|}
+    \text{Alignment}_i = \dfrac{p_i}{|p_i|} \cdot \dfrac{u_i}{|u_i|}
 \end{gather}
 The range of this measure is $[-1, 1]$, with 1 indicating that the pedestrian is moving exactly in its desired direction, -1 indicating that the pedestrian is moving exactly opposite to its desired direction, whereas 0 indicates that it is either not moving or it is moving perpendicular to its desired speed. We can use this measure to quantify the mean direction of all agents. In other words, how aligned the mean direction of all agents is to their desired direction.
-\begin{gather}
-    \text{Alignment} = \dfrac{1}{N}\hat p^T \hat u
+\begin{align}
+    \text{Alignment} &= \dfrac{1}{N}\sum_{i=1}^N \text{Alignment}_i \nonumber \\
+    &= \dfrac{1}{N}\hat p^T \hat u
     \label{eq:alignment}
-\end{gather}
+\end{align}
 This will be useful, as we will later see, in identifying ordered and disordered collective dynamics. From a collective point of view, we can say that the value near 1 or -1 will indicate orderly behavior, signalling that all pedestrians are moving in their respective desired directions. Whereas values near 0 will indicate disorder.
-\pagebreak
 
 \textbf{Calculation of Alignment}
 
