@@ -51,7 +51,7 @@ Here,
         U(x) : \mathbb{R}^2 \mapsto \mathbb{R}, \quad\quad U(x) = ABe^{-|x|/B}
         \label{eq:def_potU}
     \end{align}
-    Here, $|\cdot|$ is the minimum euclidean distance on the torus. $A$ and $B$ are scalar-valued parameters for the repulsion strength and the range of interaction respectively.
+    Here, $|\cdot|$ is the minimum euclidean distance on the torus. $A$ and $B$ are scalar-valued parameters for the repulsion strength and the range of interaction respectively. Note that $U(x)$ is an even function, such that $\forall x \in \mathbb{R}^n, U(-x) = U(x)$. 
 \end{itemize}
 
 Hence, $\nabla U(x):\mathbb{R}^2 \mapsto \mathbb{R}^2$ is defined as
@@ -59,7 +59,7 @@ Hence, $\nabla U(x):\mathbb{R}^2 \mapsto \mathbb{R}^2$ is defined as
     \nabla U(x) = -A\dfrac{x}{|x|}e^{-|x|/B} = -\nabla U(-x)
     \label{eq:def_U}
 \end{align}
-It can be seen that this parameter is responsible for avoiding collisions between pedestrians, ensuring that the repulsive forces increase in magnitude the closer a pedestrian is. The underlying assumption is that the repulsive forces are a function of distance only. This is adapted from the concept of social forces and how they are determined from the surroundings of pedestrians.
+It can be seen that this parameter is responsible for avoiding collisions between pedestrians, ensuring that the repulsive forces increase in magnitude the closer a pedestrian is. The underlying assumption is that the repulsive forces are a function of distance only. This is adapted from the concept of social forces and how they are determined from the surroundings of pedestrians. Also, note that $\nabla U(x)$ is an odd function.
 
 Using the product rule, the Hessian $\mathbf{H}_U = \nabla ^2 U(x):\mathbb{R}^2 \mapsto \mathbb{R}^{2\times2}$ can be expressed as:
 \begin{align}
@@ -89,15 +89,15 @@ The equation is reminiscent of a typical SDE with the first two terms being the 
 
 
 \subsection{Identifying Collective Phenomenon}
-With the dynamics presented so far, we can observe the individual pedestrian's attributes change over time. However, to identify whether a collective phenomenon is occurring we have also constructed a simple formula to measure the mean direction of all agents relative to their desired velocity direction, i.e. direction alignment.
+With the dynamics presented so far, we can observe the individual pedestrian's attributes change over time. However, to identify whether a collective phenomenon is occurring we have also constructed a simple formula to measure the mean direction of all agents relative to their desired velocity direction, i.e. direction alignment $\phi$.
 
 To measure how much an agent $i$ is moving in the direction of its particular desired velocity $u_i$, we can take the following dot product.
 \begin{gather}
-    \text{Alignment}_i = \dfrac{p_i}{|p_i|} \cdot \dfrac{u_i}{|u_i|}
+    \phi_i = \dfrac{p_i}{|p_i|} \cdot \dfrac{u_i}{|u_i|}, \quad \phi \in \mathbb{R}, \quad \phi \in [-1,1]
 \end{gather}
-The range of this measure is $[-1, 1]$, with 1 indicating that the pedestrian is moving exactly in its desired direction, -1 indicating that the pedestrian is moving exactly opposite to its desired direction, whereas 0 indicates that it is either not moving or it is moving perpendicular to its desired speed. We can use this measure to quantify the mean direction of all agents. In other words, how aligned the mean direction of all agents is to their desired direction.
+The range of $\phi$ is $[-1, 1]$, with 1 indicating that the pedestrian is moving exactly in its desired direction, -1 indicating that the pedestrian is moving exactly opposite to its desired direction, whereas 0 indicates that it is either not moving or it is moving perpendicular to its desired speed. We can use this measure to quantify the mean direction of all agents. In other words, how aligned the mean direction of all agents is to their desired direction.
 \begin{align}
-    \text{Alignment} &= \dfrac{1}{N}\sum_{i=1}^N \text{Alignment}_i \nonumber \\
+    \text{Alignment} &= \dfrac{1}{N}\sum_{i=1}^N \phi_i \nonumber \\
     &= \dfrac{1}{N}\hat p^T \hat u
     \label{eq:alignment}
 \end{align}
