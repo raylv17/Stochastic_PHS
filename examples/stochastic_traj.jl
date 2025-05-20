@@ -17,19 +17,19 @@ begin
     y_len = 5
     timesteps = 10000
     runs = 3
-    name = "counter"
-    startat = 30
+    name = "cross"
+    startat = 30 # for alignment
 end
 
 @time begin
     begin
         CairoMakie.activate!()
         fig1 = CairoMakie.Figure()
-        ax1 = Axis(fig1[1,1], xlabel="timesteps [dt]", ylabel="H(t)")
+        ax1 = Axis(fig1[1,1], xlabel="time [s]", ylabel="H(t)")
         fig2 = CairoMakie.Figure()
-        ax2 = Axis(fig2[1,1], xlabel="timesteps [dt]", ylabel="dH(t)")
+        ax2 = Axis(fig2[1,1], xlabel="time [s]", ylabel="dH(t)")
         fig3 = CairoMakie.Figure()
-        ax3 = Axis(fig3[1,1], xlabel="timesteps [dt]", ylabel=L"Alignment: $p^T u$")
+        ax3 = Axis(fig3[1,1], xlabel="time [s]", ylabel=L"Alignment: $p^T u$")
     end
     ## Deterministic Plot
     # begin
@@ -56,7 +56,7 @@ end
     ## Sigma 0.2 # 3 runs
     begin
         # for (sig, clr) in zip([1.0], [:magenta, :orange, :blue, :green, :red])
-        for (sig, clr) in zip([1.0,0.5,0.2,0.1,0.05], [:magenta, :orange, :blue, :green, :red])
+        for (sig, clr) in zip([0.5,0.2,0.1,0.05], [:orange, :blue, :green, :red])
             properties[:sigma] = sig
             all_dh = []
             all_ham = []
@@ -80,8 +80,9 @@ end
                 push!(all_dh, mdf[:,:stoch_dH])
                 # push!(all_dh, diff(mdf[2:end,:hamiltonian])) # for stochastic dH
                 push!(all_aligns, mdf[:,:alignment])
-                CairoMakie.lines!(ax1, mdf[2:end,:hamiltonian]  , color = clr, alpha=0.2)
-                CairoMakie.lines!(ax2, mdf[1:end,:stoch_dH]           , color = clr, alpha=0.2) 
+                t = model.dt:model.dt:model.dt*(Agents.abmtime(model)+1)
+                CairoMakie.lines!(ax1, t[2:end],mdf[2:end,:hamiltonian]  , color = clr, alpha=0.2)
+                CairoMakie.lines!(ax2, t[1:end],mdf[1:end,:stoch_dH]           , color = clr, alpha=0.2) 
                 # CairoMakie.lines!(ax2, diff(mdf[2:end,:hamiltonian]), color = clr, alpha=0.2) # for stochastic dH
                 CairoMakie.lines!(ax3, startat:Agents.abmtime(model)+1, mdf[startat:end,:alignment]         , color = clr, alpha=0.2)
                 fig1
@@ -96,7 +97,7 @@ end
                 end
                 push!(mean_list, summ/length(all_ham))
             end
-            CairoMakie.lines!(ax1, mean_list[2:end],  color = clr, label="σ = $sig")
+            CairoMakie.lines!(ax1, t[2:end],mean_list[2:end],  color = clr, label="σ = $sig")
             # CairoMakie.lines!(ax1, std_H[1][2:end], mean_list[2:end],  color = clr, label="σ = $sig")
 
             mean_list = []
@@ -108,7 +109,7 @@ end
                 end
                 push!(mean_list, summ/length(all_ham))
             end
-            CairoMakie.lines!(ax2, mean_list[1:end], color = clr, label="σ = $sig")
+            CairoMakie.lines!(ax2, t[1:end],mean_list[1:end], color = clr, label="σ = $sig")
 
             mean_list = []
             for i in 1:length(all_aligns[1])
@@ -142,20 +143,21 @@ end
         # CairoMakie.lines!(ax1, std_H[1],std_H[2],color=:black, label="σ = 0")
         # CairoMakie.lines!(ax2, std_dH[1],std_dH[2],color=:black, label="σ = 0")
         ###################
-        CairoMakie.lines!(ax1, mdf[2:end,:hamiltonian],color=:black, label="σ = 0")
-        CairoMakie.lines!(ax2, mdf[2:end,:dH],color=:black, label="σ = 0")
+        t = model.dt:model.dt:model.dt*(Agents.abmtime(model)+1)
+        CairoMakie.lines!(ax1, t[2:end],mdf[2:end,:hamiltonian],color=:black, label="σ = 0")
+        CairoMakie.lines!(ax2, t[2:end],mdf[2:end,:dH],color=:black, label="σ = 0")
         CairoMakie.lines!(ax3, startat:Agents.abmtime(model)+1, mdf[startat:end,:alignment],color=:black, label="σ = 0")    
-        CairoMakie.lines!(ax1, mdf[10:end, :no_disp_H], linestyle=:dash, label=L"H^*")
+        CairoMakie.lines!(ax1, t[10:end],mdf[10:end, :no_disp_H], linestyle=:dash, label=L"H^*")
     end
     CairoMakie.axislegend(ax1, position=:rb) # H
     CairoMakie.axislegend(ax2, position=:rt) # dH
     CairoMakie.axislegend(ax3, position=:rb) # Alignment
-    save("Images/stochastic_collective/H_stochasic_$name.png", fig1)
-    save("Images/stochastic_collective/dH_stochasic_$name.png", fig2)
-    save("Images/stochastic_collective/align_stochastic_$name.png", fig3)
-    fig3
+    save("Images/submission_ccs/H_stochasic_$name.png", fig1)
+    save("Images/submission_ccs/dH_stochasic_$name.png", fig2)
+    save("Images/submission_ccs/align_stochastic_$name.png", fig3)
+    fig1
 end
-fig3
+fig1
 
 
 fig1
@@ -184,3 +186,13 @@ fig
 
 mdf
 Agents.abmtime(model)
+
+length(model.dt:model.dt:model.dt*Agents.abmtime(model))
+length(mdf[2:end,:dH])
+
+mdf[10:end,:dH]
+length(model.dt+model.dt*8:model.dt:model.dt*Agents.abmtime(model))
+model.dt+model.dt*0:model.dt:model.dt*Agents.abmtime(model)
+
+t = model.dt:model.dt:model.dt*(Agents.abmtime(model)+1)
+length(t[2:end])

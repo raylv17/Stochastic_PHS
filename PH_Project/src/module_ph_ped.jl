@@ -413,9 +413,9 @@ function initialize(number_of_peds::Int64 = 32, x_len::Real = 11, y_len::Real = 
             # uᵢ = mod(i,4) == 0 ? [1,0] : mod(i,4) == 1 ? [-1,0] : mod(i,4) == 2 ? [0, 1] : [0, -1], # custom
             # uᵢ = mod(i,3) == 0 ? [1,0] : mod(i,3) == 1 ? [-1,0] : [1,1], # custom
             # uᵢ = mod(i,2) == 0 ? [1,0] : [-1,0] # counter_flow
-            # uᵢ = mod(i,2) == 0 ? [0,1] : [1,0] # cross
+            uᵢ = mod(i,2) == 0 ? [0,1] : [1,0] # cross
             # uᵢ = [1.0,0.0] # uni flow
-            uᵢ = [0,0]
+            # uᵢ = [0,0]
         )
     end
     return model
